@@ -1,8 +1,15 @@
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_H;
+import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
 import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
+import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
+import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFW.glfwShowWindow;
+import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
+import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 import java.nio.ByteBuffer;
@@ -12,6 +19,7 @@ import java.util.Random;
 
 import org.joml.Vector3f;
 import org.liquidengine.legui.DefaultInitializer;
+import org.liquidengine.legui.animation.AnimatorProvider;
 import org.liquidengine.legui.component.Button;
 import org.liquidengine.legui.component.Component;
 import org.liquidengine.legui.component.Frame;
@@ -22,9 +30,15 @@ import org.liquidengine.legui.event.CursorEnterEvent;
 import org.liquidengine.legui.event.MouseClickEvent;
 import org.liquidengine.legui.listener.CursorEnterEventListener;
 import org.liquidengine.legui.listener.MouseClickEventListener;
+import org.liquidengine.legui.listener.processor.EventProcessorProvider;
 import org.liquidengine.legui.style.border.SimpleLineBorder;
 import org.liquidengine.legui.style.color.ColorConstants;
+import org.liquidengine.legui.system.context.CallbackKeeper;
+import org.liquidengine.legui.system.context.Context;
+import org.liquidengine.legui.system.layout.LayoutManager;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWKeyCallbackI;
+import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
@@ -59,6 +73,8 @@ public class OpenGLARDisplay {
 	private long window;
 	private Frame leguiframe;
 	private DefaultInitializer initializer;
+	private volatile boolean running = false;
+	private volatile boolean hiding = false;
 
 	public OpenGLARDisplay() {
 		this.initOpenGL();
@@ -79,6 +95,9 @@ public class OpenGLARDisplay {
 		window = createWindow();
 		leguiframe = createFrameWithGUI();
 		initializer = new DefaultInitializer(window, leguiframe);
+
+		initializeGuiWithCallbacks();
+		running = true;
 
 		this.loader = new Loader();
 		this.cameraShader = new StaticShader(false);
@@ -227,13 +246,58 @@ public class OpenGLARDisplay {
 		return list;
 	}
 
-	public void updateDisplay() {
+	private void initializeGuiWithCallbacks() {
+		GLFWKeyCallbackI escapeCallback = (w1, key, code, action,
+				mods) -> running = !(key == GLFW_KEY_ESCAPE && action != GLFW_RELEASE);
+
+		// used to skip gui rendering
+		GLFWKeyCallbackI hideCallback = (w1, key, code, action, mods) -> {
+			if (key == GLFW_KEY_H && action == GLFW_RELEASE)
+				hiding = !hiding;
+		};
+		GLFWWindowCloseCallbackI windowCloseCallback = w -> running = false;
+
+		CallbackKeeper keeper = initializer.getCallbackKeeper();
+		keeper.getChainKeyCallback().add(escapeCallback);
+		keeper.getChainKeyCallback().add(hideCallback);
+		keeper.getChainWindowCloseCallback().add(windowCloseCallback);
+
+		org.liquidengine.legui.system.renderer.Renderer renderer = initializer.getRenderer();
+		renderer.initialize();
+	}
+
+	public void updateDisplay(Context context, org.liquidengine.legui.system.renderer.Renderer ren) {
+
+		context.updateGlfwWindow();
 		this.renderer.prepare();
 		this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
-		// DisplayManager.updateDisplay();
+
+		// render gui frame
+		if (!hiding) {
+			ren.render(leguiframe, context);
+		}
+		// poll events to callbacks
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+		// Now we need to process events. Firstly we need to process system
+		// events.
+		initializer.getSystemEventProcessor().processEvents(leguiframe, context);
+
+		// When system events are translated to GUI events we need to
+		// process them.
+		// This event processor calls listeners added to ui components
+		EventProcessorProvider.getInstance().processEvents();
+
+		// When everything done we need to relayout components.
+		LayoutManager.getInstance().layout(leguiframe);
+
+		// Run animations. Should be also called cause some components use
+		// animations for updating state.
+		AnimatorProvider.getAnimator().runAnimations();
 	}
 
 	public void setFrameToTexture(Mat frame, Entity bgEntity, boolean bgr) {
+
 		// convert Frame to texture (note OpenGL textures should be in RGB format where
 		// OpenCV saves images in BGR order)
 		byte[] bytes;
@@ -295,6 +359,9 @@ public class OpenGLARDisplay {
 			output = this.pipelineBuffer.getNext();
 		}
 
+		if (output == null) {
+			return;
+		}
 		if (!output.finalFrame) {
 			this.setCameraPose(output.r00, output.r01, output.r02, output.r10, output.r11, output.r12, output.r20,
 					output.r21, output.r22, output.tx, output.ty, output.tz);
@@ -310,14 +377,23 @@ public class OpenGLARDisplay {
 	}
 
 	public void displayLoop() {
-//
-//		while (!Display.isCloseRequested()) {
-//			this.detectChanges();
-//			this.updateDisplay();
-//		}
-//		this.cameraShader.cleanUp();
-//		this.loader.cleanUp();
-//		DisplayManager.closeDisplay();
+
+		Context context = initializer.getContext();
+		org.liquidengine.legui.system.renderer.Renderer ren = initializer.getRenderer();
+
+		while (running) {
+			this.detectChanges();
+			this.updateDisplay(context, ren);
+			try {
+				// Thread.sleep(10);
+			} catch (Exception e) {
+			}
+		}
+		initializer.getRenderer().destroy();
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		this.cameraShader.cleanUp();
+		this.loader.cleanUp();
 
 	}
 

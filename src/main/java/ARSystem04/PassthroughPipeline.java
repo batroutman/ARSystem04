@@ -5,7 +5,6 @@ import buffers.FramePack;
 import buffers.PipelineOutput;
 import buffers.QueuedBuffer;
 import buffers.SingletonBuffer;
-import toolbox.Utils;
 
 public class PassthroughPipeline extends PoseEstimator {
 
@@ -35,7 +34,23 @@ public class PassthroughPipeline extends PoseEstimator {
 	}
 
 	public void mainloop() {
-		Utils.p("Hello world!");
+		boolean keepGoing = true;
+		while (keepGoing) {
+			FramePack newFrame = inputBuffer.getNext();
+			if (newFrame == null) {
+				keepGoing = false;
+				continue;
+			}
+
+			PipelineOutput po = new PipelineOutput();
+			po.rawFrame = newFrame.getRawFrame();
+			outputBuffer.push(po);
+			try {
+				Thread.sleep(10);
+			} catch (Exception e) {
+			}
+
+		}
 	}
 
 }
