@@ -8,6 +8,8 @@ import buffers.SingletonBuffer;
 
 public class PassthroughPipeline extends PoseEstimator {
 
+	int frameNum = 0;
+
 	Thread poseEstimationThread = new Thread() {
 		@Override
 		public void run() {
@@ -43,10 +45,11 @@ public class PassthroughPipeline extends PoseEstimator {
 			}
 
 			PipelineOutput po = new PipelineOutput();
+			po.frameNum = this.frameNum++;
 			po.rawFrame = newFrame.getRawFrame();
 			outputBuffer.push(po);
 			try {
-				Thread.sleep(10);
+				Thread.sleep(33);
 			} catch (Exception e) {
 			}
 

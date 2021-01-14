@@ -118,13 +118,12 @@ public class OpenGLARDisplay {
 
 		};
 
-		// float[] textureCoords = {
-		//
-		// 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1,
-		// 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
-		// 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0
-		//
-		// };
+//		float[] textureCoords = {
+//
+//				0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+//				1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0
+//
+//		};
 
 		float[] textureCoords = {
 
@@ -141,29 +140,27 @@ public class OpenGLARDisplay {
 		RawModel tModel = this.loader.loadToVAO(vertices, textureCoords, indices);
 		TexturedModel tStaticModel = new TexturedModel(tModel,
 				new ModelTexture(this.loader.loadTexture("sample_texture_128")));
+//		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
 		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
 		this.entities.add(tEntity);
 
 		Random rand = new Random(100);
 
-		// right line of boxes
-		for (int i = 0; i < 100; i++) {
-			// this.entities.add(new Entity(tStaticModel, new Vector3f(50f, 0f,
-			// (i - 50) * 10), 0, 0, 0, 1f));
-		}
-
-		// left line of boxes
-		for (int i = 0; i < 100; i++) {
-			// this.entities.add(new Entity(tStaticModel, new Vector3f(-50f, 0f,
-			// (i - 50) * 10), 0, 0, 0, 1f));
-		}
-
-		// bottom plane of boxes
-		for (int i = 0; i < 100; i++) {
-			// this.entities.add(new Entity(tStaticModel,
-			// new Vector3f(rand.nextFloat() * 250 - 125, 2f, rand.nextFloat() *
-			// 250 - 125), 0, 0, 0, 0.5f));
-		}
+//		// right line of boxes
+//		for (int i = 0; i < 100; i++) {
+//			this.entities.add(new Entity(tStaticModel, new Vector3f(50f, 0f, (i - 50) * 10), 0, 0, 0, 1f));
+//		}
+//
+//		// left line of boxes
+//		for (int i = 0; i < 100; i++) {
+//			this.entities.add(new Entity(tStaticModel, new Vector3f(-50f, 0f, (i - 50) * 10), 0, 0, 0, 1f));
+//		}
+//
+//		// bottom plane of boxes
+//		for (int i = 0; i < 100; i++) {
+//			this.entities.add(new Entity(tStaticModel,
+//					new Vector3f(rand.nextFloat() * 250 - 125, 0f, rand.nextFloat() * 250 - 125), 0, 0, 0, 0.5f));
+//		}
 
 		// create camera
 		this.camera = new Camera();
@@ -185,12 +182,12 @@ public class OpenGLARDisplay {
 		RawModel processedBgModel = this.loader.loadToVAO(bgVertices, bgTextureCoords, bgIndices);
 		TexturedModel processedBgStaticModel = new TexturedModel(processedBgModel,
 				new ModelTexture(this.loader.loadTexture("sample_texture")));
-		this.rawFrameEntity = new Entity(processedBgStaticModel, new Vector3f(0, 0, -10), 0, 0, 0, 2000);
+		this.processedFrameEntity = new Entity(processedBgStaticModel, new Vector3f(0, 0, -10), 0, 0, 0, 2000);
 
 	}
 
 	private long createWindow() {
-		long window = glfwCreateWindow(Parameters.width, Parameters.height, "Single Class Example", NULL, NULL);
+		long window = glfwCreateWindow(Parameters.width, Parameters.height, "AR System 04", NULL, NULL);
 		glfwShowWindow(window);
 
 		glfwMakeContextCurrent(window);
@@ -201,6 +198,7 @@ public class OpenGLARDisplay {
 
 	private Frame createFrameWithGUI() {
 		Frame frame = new Frame(Parameters.width, Parameters.height);
+
 		// Set background color for frame
 		frame.getContainer().getStyle().getBackground().setColor(ColorConstants.transparent());
 		frame.getContainer().setFocusable(false);
@@ -385,7 +383,7 @@ public class OpenGLARDisplay {
 			this.detectChanges();
 			this.updateDisplay(context, ren);
 			try {
-				// Thread.sleep(10);
+				// Thread.sleep(100);
 			} catch (Exception e) {
 			}
 		}

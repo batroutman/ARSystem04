@@ -14,18 +14,18 @@ public class Camera {
 	private float roll;
 
 	// extrinsic format
-	float r00;
-	float r01;
-	float r02;
-	float tx;
-	float r10;
-	float r11;
-	float r12;
-	float ty;
-	float r20;
-	float r21;
-	float r22;
-	float tz;
+	float r00 = 1;
+	float r01 = 0;
+	float r02 = 0;
+	float tx = 0;
+	float r10 = 0;
+	float r11 = 1;
+	float r12 = 0;
+	float ty = 0;
+	float r20 = 0;
+	float r21 = 0;
+	float r22 = 1;
+	float tz = 0;
 
 	public Camera() {
 	}
@@ -94,8 +94,11 @@ public class Camera {
 		mat.set(1, 3, ty);
 		mat.set(2, 3, tz);
 
+//		Matrix4f viewMatrix = Utils.MatrixToMatrix4f(mat);
 		Matrix4f viewMatrix = Utils.MatrixToMatrix4f(Rx.times(mat));
-		viewMatrix.transpose(viewMatrix);
+//		Matrix4f viewMatrix = Utils.MatrixToMatrix4f(mat.times(Rx));
+//		Utils.printMatrix(viewMatrix);
+//		viewMatrix.transpose(viewMatrix);
 
 		return viewMatrix;
 	}

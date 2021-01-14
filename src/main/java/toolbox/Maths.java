@@ -18,6 +18,7 @@ public class Maths {
 		return matrix;
 	}
 
+	// unused
 	public static Matrix4f createViewMatrix(Camera camera) {
 		Matrix4f viewMatrix = new Matrix4f();
 		viewMatrix.identity();
