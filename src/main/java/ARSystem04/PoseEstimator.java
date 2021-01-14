@@ -1,8 +1,8 @@
 package ARSystem04;
 
 import buffers.Buffer;
-import buffers.FramePack;
-import buffers.PipelineOutput;
+import types.FramePack;
+import types.PipelineOutput;
 
 public abstract class PoseEstimator {
 

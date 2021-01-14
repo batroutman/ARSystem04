@@ -45,7 +45,6 @@ import org.lwjgl.opengl.GL30;
 import org.opencv.core.Mat;
 
 import buffers.Buffer;
-import buffers.PipelineOutput;
 import entities.Camera;
 import entities.Entity;
 import models.RawModel;
@@ -55,10 +54,17 @@ import renderEngine.Renderer;
 import runtimevars.Parameters;
 import shaders.StaticShader;
 import textures.ModelTexture;
+import types.Correspondence2D2D;
+import types.PipelineOutput;
 
 public class OpenGLARDisplay {
 
 	Buffer<PipelineOutput> pipelineBuffer = null;
+
+	int AR_VIEW = 0;
+	int PROCESSED_VIEW = 1;
+	int MAP_VIEW = 2;
+	int view = PROCESSED_VIEW;
 
 	Loader loader;
 	Renderer renderer;
@@ -68,6 +74,8 @@ public class OpenGLARDisplay {
 	Entity rawFrameEntity;
 	Entity processedFrameEntity;
 	StaticShader bgShader;
+
+	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 
 	// legui
 	private long window;
@@ -125,12 +133,17 @@ public class OpenGLARDisplay {
 //
 //		};
 
-		float[] textureCoords = {
+//		float[] textureCoords = {
+//
+//				1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
+//				1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0
+//
+//		};
 
-				1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
-				1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0
-
-		};
+		float[] textureCoords = { 0.25f, 0f, 0.25f, 0.25f, 0.5f, 0.25f, 0.5f, 0, 0.25f, 0.25f, 0.25f, 0.5f, 0.5f, 0.5f,
+				0.5f, 0.25f, 0.25f, 0.5f, 0.25f, 0.75f, 0.5f, 0.75f, 0.5f, 0.5f, 0.25f, 0.75f, 0.25f, 1f, 0.5f, 1f,
+				0.5f, 0.75f, 0f, 0.25f, 0f, 0.5f, 0.25f, 0.5f, 0.25f, 0.25f, 0.5f, 0.25f, 0.5f, 0.5f, 0.75f, 0.5f,
+				0.75f, 0.25f };
 
 		int[] indices = { 0, 1, 3, 3, 1, 2, 4, 5, 7, 7, 5, 6, 8, 9, 11, 11, 9, 10, 12, 13, 15, 15, 13, 14, 16, 17, 19,
 				19, 17, 18, 20, 21, 23, 23, 21, 22
@@ -139,8 +152,7 @@ public class OpenGLARDisplay {
 
 		RawModel tModel = this.loader.loadToVAO(vertices, textureCoords, indices);
 		TexturedModel tStaticModel = new TexturedModel(tModel,
-				new ModelTexture(this.loader.loadTexture("sample_texture_128")));
-//		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
+				new ModelTexture(this.loader.loadTexture("solid_colors_64")));
 		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
 		this.entities.add(tEntity);
 
@@ -268,7 +280,11 @@ public class OpenGLARDisplay {
 
 		context.updateGlfwWindow();
 		this.renderer.prepare();
-		this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
+		if (this.view == AR_VIEW) {
+			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
+		} else if (this.view == PROCESSED_VIEW) {
+			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences);
+		}
 
 		// render gui frame
 		if (!hiding) {
@@ -372,6 +388,7 @@ public class OpenGLARDisplay {
 		if (output.processedFrame != null) {
 			this.setFrameToTexture(output.processedFrame, this.processedFrameEntity, false);
 		}
+		this.correspondences = output.correspondences;
 	}
 
 	public void displayLoop() {

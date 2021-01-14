@@ -3,10 +3,10 @@ import org.opencv.core.Core;
 import ARSystem04.PassthroughPipeline;
 import ARSystem04.PoseEstimator;
 import buffers.Buffer;
-import buffers.FramePack;
-import buffers.PipelineOutput;
 import buffers.SingletonBuffer;
 import buffers.TUMBuffer;
+import types.FramePack;
+import types.PipelineOutput;
 
 public class ARBootstrapper {
 

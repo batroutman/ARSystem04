@@ -1,4 +1,6 @@
-package buffers;
+package types;
+
+import java.util.ArrayList;
 
 import org.opencv.core.Mat;
 
@@ -39,5 +41,8 @@ public class PipelineOutput {
 	// frame data
 	public Mat rawFrame = null;
 	public Mat processedFrame = null;
+
+	// processed frame data
+	public ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 
 }

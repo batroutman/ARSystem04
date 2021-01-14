@@ -1,4 +1,4 @@
-package buffers;
+package types;
 
 import org.opencv.core.Mat;
 

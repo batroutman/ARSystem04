@@ -8,6 +8,8 @@ import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import types.FramePack;
+
 // Offline frame buffer designed to load in images from the TUM dataset
 public class TUMBuffer implements Buffer<FramePack> {
 

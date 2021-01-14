@@ -1,10 +1,12 @@
 package ARSystem04;
 
 import buffers.Buffer;
-import buffers.FramePack;
-import buffers.PipelineOutput;
 import buffers.QueuedBuffer;
 import buffers.SingletonBuffer;
+import runtimevars.Parameters;
+import types.Correspondence2D2D;
+import types.FramePack;
+import types.PipelineOutput;
 
 public class PassthroughPipeline extends PoseEstimator {
 
@@ -47,6 +49,11 @@ public class PassthroughPipeline extends PoseEstimator {
 			PipelineOutput po = new PipelineOutput();
 			po.frameNum = this.frameNum++;
 			po.rawFrame = newFrame.getRawFrame();
+			po.processedFrame = newFrame.getProcessedFrame();
+			po.correspondences.add(new Correspondence2D2D(50, 50, 200, 256));
+			po.correspondences.add(new Correspondence2D2D(0, 0, 45, 30));
+			po.correspondences.add(new Correspondence2D2D(0, 0, Parameters.width - 10, Parameters.height - 10));
+
 			outputBuffer.push(po);
 			try {
 				Thread.sleep(33);
