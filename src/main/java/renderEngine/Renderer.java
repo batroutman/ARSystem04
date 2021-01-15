@@ -17,7 +17,6 @@ import runtimevars.CameraIntrinsics;
 import runtimevars.Parameters;
 import shaders.StaticShader;
 import toolbox.Maths;
-import toolbox.Utils;
 import types.Correspondence2D2D;
 
 public class Renderer {
@@ -106,7 +105,6 @@ public class Renderer {
 	}
 
 	public void renderCorrespondences(List<Correspondence2D2D> correspondences) {
-		Utils.pl("correspondences size: " + correspondences.size());
 		GL11.glColor3f(0, 1, 0);
 		GL11.glLineWidth(2.0f);
 		GL11.glMatrixMode(GL11.GL_PROJECTION);

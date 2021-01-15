@@ -41,6 +41,8 @@ public class PipelineOutput {
 	// frame data
 	public Mat rawFrame = null;
 	public Mat processedFrame = null;
+	public byte[] rawFrameBuffer = null;
+	public byte[] processedFrameBuffer = null;
 
 	// processed frame data
 	public ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();

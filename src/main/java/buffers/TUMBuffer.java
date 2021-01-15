@@ -14,7 +14,7 @@ import types.FramePack;
 public class TUMBuffer implements Buffer<FramePack> {
 
 	// DEBUG: limit the number of frames to pre-load
-	long frameLimit = 60;
+	long frameLimit = 600;
 
 	// preloaded frames
 	ArrayList<FramePack> frames = new ArrayList<FramePack>();
@@ -142,11 +142,21 @@ public class TUMBuffer implements Buffer<FramePack> {
 
 		Mat rawFrame = Imgcodecs.imread(fullPath);
 		Mat processedFrame = new Mat();
-		Imgproc.cvtColor(rawFrame, processedFrame, Imgproc.COLOR_BGR2GRAY);
+
+		Imgproc.cvtColor(rawFrame, rawFrame, Imgproc.COLOR_BGR2RGB);
+		Imgproc.cvtColor(rawFrame, processedFrame, Imgproc.COLOR_RGB2GRAY);
+
+		byte[] rawBuffer = new byte[rawFrame.rows() * rawFrame.cols() * 3];
+		byte[] processedBuffer = new byte[processedFrame.rows() * processedFrame.cols()];
+		rawFrame.get(0, 0, rawBuffer);
+		processedFrame.get(0, 0, processedBuffer);
 
 		FramePack framePack = new FramePack();
 		framePack.setRawFrame(rawFrame);
 		framePack.setProcessedFrame(processedFrame);
+		framePack.setRawFrameBuffer(rawBuffer);
+		framePack.setProcessedFrameBuffer(processedBuffer);
+
 		return framePack;
 
 	}

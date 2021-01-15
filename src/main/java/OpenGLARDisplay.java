@@ -42,7 +42,6 @@ import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
-import org.opencv.core.Mat;
 
 import buffers.Buffer;
 import entities.Camera;
@@ -54,6 +53,7 @@ import renderEngine.Renderer;
 import runtimevars.Parameters;
 import shaders.StaticShader;
 import textures.ModelTexture;
+import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.PipelineOutput;
 
@@ -64,7 +64,8 @@ public class OpenGLARDisplay {
 	int AR_VIEW = 0;
 	int PROCESSED_VIEW = 1;
 	int MAP_VIEW = 2;
-	int view = PROCESSED_VIEW;
+	int ALL_VIEW = 3;
+	int view = ALL_VIEW;
 
 	Loader loader;
 	Renderer renderer;
@@ -199,7 +200,7 @@ public class OpenGLARDisplay {
 	}
 
 	private long createWindow() {
-		long window = glfwCreateWindow(Parameters.width, Parameters.height, "AR System 04", NULL, NULL);
+		long window = glfwCreateWindow(Parameters.screenWidth, Parameters.screenHeight, "AR System 04", NULL, NULL);
 		glfwShowWindow(window);
 
 		glfwMakeContextCurrent(window);
@@ -281,13 +282,21 @@ public class OpenGLARDisplay {
 		context.updateGlfwWindow();
 		this.renderer.prepare();
 		if (this.view == AR_VIEW) {
+			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 		} else if (this.view == PROCESSED_VIEW) {
+			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
+			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences);
+		} else if (this.view == ALL_VIEW) {
+			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
+			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
+			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences);
 		}
 
 		// render gui frame
 		if (!hiding) {
+			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			ren.render(leguiframe, context);
 		}
 		// poll events to callbacks
@@ -308,33 +317,10 @@ public class OpenGLARDisplay {
 		// Run animations. Should be also called cause some components use
 		// animations for updating state.
 		AnimatorProvider.getAnimator().runAnimations();
+
 	}
 
-	public void setFrameToTexture(Mat frame, Entity bgEntity, boolean bgr) {
-
-		// convert Frame to texture (note OpenGL textures should be in RGB format where
-		// OpenCV saves images in BGR order)
-		byte[] bytes;
-
-		if (bgr) {
-			bytes = new byte[frame.rows() * frame.cols() * 3];
-			int byteIndex = 0;
-			for (int row = 0; row < frame.rows(); row++) {
-				for (int col = 0; col < frame.cols(); col++) {
-					bytes[byteIndex++] = (byte) frame.get(row, col)[2];
-					bytes[byteIndex++] = (byte) frame.get(row, col)[1];
-					bytes[byteIndex++] = (byte) frame.get(row, col)[0];
-				}
-			}
-		} else {
-			bytes = new byte[frame.rows() * frame.cols()];
-			int byteIndex = 0;
-			for (int row = 0; row < frame.rows(); row++) {
-				for (int col = 0; col < frame.cols(); col++) {
-					bytes[byteIndex++] = (byte) frame.get(row, col)[0];
-				}
-			}
-		}
+	public void setFrameToTexture(byte[] bytes, Entity bgEntity, boolean bgr) {
 
 		ByteBuffer pixels = ByteBuffer.allocateDirect(bytes.length);
 		pixels.put(bytes);
@@ -348,10 +334,10 @@ public class OpenGLARDisplay {
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		if (bgr) {
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, frame.cols(), frame.rows(), 0, GL11.GL_RGB,
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, Parameters.width, Parameters.height, 0, GL11.GL_RGB,
 					GL11.GL_UNSIGNED_BYTE, pixels);
 		} else {
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_LUMINANCE, frame.cols(), frame.rows(), 0,
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_LUMINANCE, Parameters.width, Parameters.height, 0,
 					GL11.GL_LUMINANCE, GL11.GL_UNSIGNED_BYTE, pixels);
 		}
 
@@ -379,16 +365,17 @@ public class OpenGLARDisplay {
 		if (!output.finalFrame) {
 			this.setCameraPose(output.r00, output.r01, output.r02, output.r10, output.r11, output.r12, output.r20,
 					output.r21, output.r22, output.tx, output.ty, output.tz);
-			// DEBUG LINE
-			// this.camera.move();
 		}
-		if (output.rawFrame != null) {
-			this.setFrameToTexture(output.rawFrame, this.rawFrameEntity, true);
+
+		if (output.rawFrameBuffer != null) {
+			this.setFrameToTexture(output.rawFrameBuffer, this.rawFrameEntity, true);
 		}
-		if (output.processedFrame != null) {
-			this.setFrameToTexture(output.processedFrame, this.processedFrameEntity, false);
+
+		if (output.processedFrameBuffer != null) {
+			this.setFrameToTexture(output.processedFrameBuffer, this.processedFrameEntity, false);
 		}
 		this.correspondences = output.correspondences;
+
 	}
 
 	public void displayLoop() {
@@ -397,12 +384,11 @@ public class OpenGLARDisplay {
 		org.liquidengine.legui.system.renderer.Renderer ren = initializer.getRenderer();
 
 		while (running) {
+			long start = System.currentTimeMillis();
 			this.detectChanges();
 			this.updateDisplay(context, ren);
-			try {
-				// Thread.sleep(100);
-			} catch (Exception e) {
-			}
+			long end = System.currentTimeMillis();
+			Utils.pl("framerate: " + (1000 / (end - start)));
 		}
 		initializer.getRenderer().destroy();
 		glfwDestroyWindow(window);

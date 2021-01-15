@@ -50,13 +50,16 @@ public class PassthroughPipeline extends PoseEstimator {
 			po.frameNum = this.frameNum++;
 			po.rawFrame = newFrame.getRawFrame();
 			po.processedFrame = newFrame.getProcessedFrame();
+			po.rawFrameBuffer = newFrame.getRawFrameBuffer();
+			po.processedFrame.get(0, 0, newFrame.getProcessedFrameBuffer());
+			po.processedFrameBuffer = newFrame.getProcessedFrameBuffer();
 			po.correspondences.add(new Correspondence2D2D(50, 50, 200, 256));
 			po.correspondences.add(new Correspondence2D2D(0, 0, 45, 30));
 			po.correspondences.add(new Correspondence2D2D(0, 0, Parameters.width - 10, Parameters.height - 10));
 
 			outputBuffer.push(po);
 			try {
-				Thread.sleep(33);
+				Thread.sleep(5);
 			} catch (Exception e) {
 			}
 
