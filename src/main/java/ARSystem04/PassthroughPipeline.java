@@ -40,6 +40,7 @@ public class PassthroughPipeline extends PoseEstimator {
 	public void mainloop() {
 		boolean keepGoing = true;
 		while (keepGoing) {
+			long start = System.currentTimeMillis();
 			FramePack newFrame = inputBuffer.getNext();
 			if (newFrame == null) {
 				keepGoing = false;
@@ -57,11 +58,15 @@ public class PassthroughPipeline extends PoseEstimator {
 			po.correspondences.add(new Correspondence2D2D(0, 0, 45, 30));
 			po.correspondences.add(new Correspondence2D2D(0, 0, Parameters.width - 10, Parameters.height - 10));
 
-			outputBuffer.push(po);
 			try {
-				Thread.sleep(5);
+				Thread.sleep(33);
 			} catch (Exception e) {
 			}
+
+			long end = System.currentTimeMillis();
+			po.fps = 1000 / (end - start + 1);
+
+			outputBuffer.push(po);
 
 		}
 	}

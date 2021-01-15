@@ -1,51 +1,19 @@
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_H;
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
-import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
-import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
-import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
-import static org.lwjgl.glfw.GLFW.glfwShowWindow;
-import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
-import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
-import static org.lwjgl.system.MemoryUtil.NULL;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import org.joml.Vector3f;
-import org.liquidengine.legui.DefaultInitializer;
-import org.liquidengine.legui.animation.AnimatorProvider;
-import org.liquidengine.legui.component.Button;
-import org.liquidengine.legui.component.Component;
-import org.liquidengine.legui.component.Frame;
-import org.liquidengine.legui.component.Label;
-import org.liquidengine.legui.component.RadioButton;
-import org.liquidengine.legui.component.RadioButtonGroup;
-import org.liquidengine.legui.event.CursorEnterEvent;
-import org.liquidengine.legui.event.MouseClickEvent;
-import org.liquidengine.legui.listener.CursorEnterEventListener;
-import org.liquidengine.legui.listener.MouseClickEventListener;
-import org.liquidengine.legui.listener.processor.EventProcessorProvider;
-import org.liquidengine.legui.style.border.SimpleLineBorder;
-import org.liquidengine.legui.style.color.ColorConstants;
-import org.liquidengine.legui.system.context.CallbackKeeper;
 import org.liquidengine.legui.system.context.Context;
-import org.liquidengine.legui.system.layout.LayoutManager;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWKeyCallbackI;
-import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
-import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
 import buffers.Buffer;
 import entities.Camera;
 import entities.Entity;
+import gui.GUIComponents;
 import models.RawModel;
 import models.TexturedModel;
 import renderEngine.Loader;
@@ -53,19 +21,12 @@ import renderEngine.Renderer;
 import runtimevars.Parameters;
 import shaders.StaticShader;
 import textures.ModelTexture;
-import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.PipelineOutput;
 
 public class OpenGLARDisplay {
 
 	Buffer<PipelineOutput> pipelineBuffer = null;
-
-	int AR_VIEW = 0;
-	int PROCESSED_VIEW = 1;
-	int MAP_VIEW = 2;
-	int ALL_VIEW = 3;
-	int view = ALL_VIEW;
 
 	Loader loader;
 	Renderer renderer;
@@ -79,11 +40,7 @@ public class OpenGLARDisplay {
 	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 
 	// legui
-	private long window;
-	private Frame leguiframe;
-	private DefaultInitializer initializer;
-	private volatile boolean running = false;
-	private volatile boolean hiding = false;
+	GUIComponents gui = new GUIComponents();
 
 	public OpenGLARDisplay() {
 		this.initOpenGL();
@@ -98,15 +55,7 @@ public class OpenGLARDisplay {
 
 		// initialize
 //		DisplayManager.createDisplay(Parameters.width, Parameters.height);
-		if (!GLFW.glfwInit()) {
-			throw new RuntimeException("Can't initialize GLFW");
-		}
-		window = createWindow();
-		leguiframe = createFrameWithGUI();
-		initializer = new DefaultInitializer(window, leguiframe);
-
-		initializeGuiWithCallbacks();
-		running = true;
+		this.gui.initGUI();
 
 		this.loader = new Loader();
 		this.cameraShader = new StaticShader(false);
@@ -199,95 +148,17 @@ public class OpenGLARDisplay {
 
 	}
 
-	private long createWindow() {
-		long window = glfwCreateWindow(Parameters.screenWidth, Parameters.screenHeight, "AR System 04", NULL, NULL);
-		glfwShowWindow(window);
-
-		glfwMakeContextCurrent(window);
-		GL.createCapabilities();
-		glfwSwapInterval(0);
-		return window;
-	}
-
-	private Frame createFrameWithGUI() {
-		Frame frame = new Frame(Parameters.width, Parameters.height);
-
-		// Set background color for frame
-		frame.getContainer().getStyle().getBackground().setColor(ColorConstants.transparent());
-		frame.getContainer().setFocusable(false);
-
-		Button button = new Button("Add components", 20, 20, 160, 30);
-		SimpleLineBorder border = new SimpleLineBorder(ColorConstants.black(), 1);
-		button.getStyle().setBorder(border);
-
-		boolean[] added = { false };
-		button.getListenerMap().addListener(MouseClickEvent.class, (MouseClickEventListener) event -> {
-			if (!added[0]) {
-				added[0] = true;
-				for (Component c : generateOnFly()) {
-					frame.getContainer().add(c);
-				}
-			}
-		});
-
-		button.getListenerMap().addListener(CursorEnterEvent.class, (CursorEnterEventListener) System.out::println);
-
-		frame.getContainer().add(button);
-		return frame;
-	}
-
-	private List<Component> generateOnFly() {
-		List<Component> list = new ArrayList<>();
-
-		Label label = new Label(20, 60, 200, 20);
-		label.getTextState().setText("Generated on fly label");
-		label.getStyle().setTextColor(ColorConstants.red());
-
-		RadioButtonGroup group = new RadioButtonGroup();
-		RadioButton radioButtonFirst = new RadioButton("First", 20, 90, 200, 20);
-		RadioButton radioButtonSecond = new RadioButton("Second", 20, 110, 200, 20);
-
-		radioButtonFirst.setRadioButtonGroup(group);
-		radioButtonSecond.setRadioButtonGroup(group);
-
-		list.add(label);
-		list.add(radioButtonFirst);
-		list.add(radioButtonSecond);
-
-		return list;
-	}
-
-	private void initializeGuiWithCallbacks() {
-		GLFWKeyCallbackI escapeCallback = (w1, key, code, action,
-				mods) -> running = !(key == GLFW_KEY_ESCAPE && action != GLFW_RELEASE);
-
-		// used to skip gui rendering
-		GLFWKeyCallbackI hideCallback = (w1, key, code, action, mods) -> {
-			if (key == GLFW_KEY_H && action == GLFW_RELEASE)
-				hiding = !hiding;
-		};
-		GLFWWindowCloseCallbackI windowCloseCallback = w -> running = false;
-
-		CallbackKeeper keeper = initializer.getCallbackKeeper();
-		keeper.getChainKeyCallback().add(escapeCallback);
-		keeper.getChainKeyCallback().add(hideCallback);
-		keeper.getChainWindowCloseCallback().add(windowCloseCallback);
-
-		org.liquidengine.legui.system.renderer.Renderer renderer = initializer.getRenderer();
-		renderer.initialize();
-	}
-
-	public void updateDisplay(Context context, org.liquidengine.legui.system.renderer.Renderer ren) {
+	public void updateDisplay(Context context) {
 
 		context.updateGlfwWindow();
 		this.renderer.prepare();
-		if (this.view == AR_VIEW) {
+		if (this.gui.getView() == GUIComponents.AR_VIEW) {
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
-		} else if (this.view == PROCESSED_VIEW) {
+		} else if (this.gui.getView() == GUIComponents.PROCESSED_VIEW) {
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences);
-		} else if (this.view == ALL_VIEW) {
+		} else if (this.gui.getView() == GUIComponents.ALL_VIEW) {
 			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
@@ -295,28 +166,7 @@ public class OpenGLARDisplay {
 		}
 
 		// render gui frame
-		if (!hiding) {
-			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
-			ren.render(leguiframe, context);
-		}
-		// poll events to callbacks
-		glfwPollEvents();
-		glfwSwapBuffers(window);
-		// Now we need to process events. Firstly we need to process system
-		// events.
-		initializer.getSystemEventProcessor().processEvents(leguiframe, context);
-
-		// When system events are translated to GUI events we need to
-		// process them.
-		// This event processor calls listeners added to ui components
-		EventProcessorProvider.getInstance().processEvents();
-
-		// When everything done we need to relayout components.
-		LayoutManager.getInstance().layout(leguiframe);
-
-		// Run animations. Should be also called cause some components use
-		// animations for updating state.
-		AnimatorProvider.getAnimator().runAnimations();
+		this.gui.renderGUI();
 
 	}
 
@@ -375,23 +225,21 @@ public class OpenGLARDisplay {
 			this.setFrameToTexture(output.processedFrameBuffer, this.processedFrameEntity, false);
 		}
 		this.correspondences = output.correspondences;
+		this.gui.updateFpsLabel(output.fps);
+		this.gui.updateFrameNumLabel(output.frameNum);
 
 	}
 
 	public void displayLoop() {
 
-		Context context = initializer.getContext();
-		org.liquidengine.legui.system.renderer.Renderer ren = initializer.getRenderer();
+		Context context = this.gui.getInitializer().getContext();
 
-		while (running) {
-			long start = System.currentTimeMillis();
+		while (this.gui.isRunning()) {
 			this.detectChanges();
-			this.updateDisplay(context, ren);
-			long end = System.currentTimeMillis();
-			Utils.pl("framerate: " + (1000 / (end - start)));
+			this.updateDisplay(context);
 		}
-		initializer.getRenderer().destroy();
-		glfwDestroyWindow(window);
+
+		this.gui.destroy();
 		glfwTerminate();
 		this.cameraShader.cleanUp();
 		this.loader.cleanUp();
