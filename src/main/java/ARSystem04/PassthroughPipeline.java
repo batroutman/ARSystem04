@@ -1,16 +1,20 @@
 package ARSystem04;
 
+import java.util.Random;
+
 import buffers.Buffer;
 import buffers.QueuedBuffer;
 import buffers.SingletonBuffer;
 import runtimevars.Parameters;
 import types.Correspondence2D2D;
+import types.Feature;
 import types.FramePack;
 import types.PipelineOutput;
 
 public class PassthroughPipeline extends PoseEstimator {
 
 	int frameNum = 0;
+	double tz = 0;
 
 	Thread poseEstimationThread = new Thread() {
 		@Override
@@ -54,9 +58,20 @@ public class PassthroughPipeline extends PoseEstimator {
 			po.rawFrameBuffer = newFrame.getRawFrameBuffer();
 			po.processedFrame.get(0, 0, newFrame.getProcessedFrameBuffer());
 			po.processedFrameBuffer = newFrame.getProcessedFrameBuffer();
-			po.correspondences.add(new Correspondence2D2D(50, 50, 200, 256));
-			po.correspondences.add(new Correspondence2D2D(0, 0, 45, 30));
-			po.correspondences.add(new Correspondence2D2D(0, 0, Parameters.width - 10, Parameters.height - 10));
+
+			Random rand = new Random(100);
+
+			for (int i = 0; i < 100; i++) {
+				double x0 = rand.nextDouble() * Parameters.width;
+				double y0 = rand.nextDouble() * Parameters.height;
+				double x1 = rand.nextDouble() * Parameters.width;
+				double y1 = rand.nextDouble() * Parameters.height;
+				po.correspondences.add(new Correspondence2D2D(x0, y0, x1, y1));
+				po.features.add(new Feature(x1, y1, (int) (15 * rand.nextDouble()) + 5));
+			}
+
+			this.tz -= 0.003;
+			po.tz = this.tz;
 
 			try {
 				Thread.sleep(33);

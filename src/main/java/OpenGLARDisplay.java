@@ -22,6 +22,7 @@ import runtimevars.Parameters;
 import shaders.StaticShader;
 import textures.ModelTexture;
 import types.Correspondence2D2D;
+import types.Feature;
 import types.PipelineOutput;
 
 public class OpenGLARDisplay {
@@ -38,6 +39,7 @@ public class OpenGLARDisplay {
 	StaticShader bgShader;
 
 	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+	ArrayList<Feature> features = new ArrayList<Feature>();
 
 	// legui
 	GUIComponents gui = new GUIComponents();
@@ -157,12 +159,14 @@ public class OpenGLARDisplay {
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 		} else if (this.gui.getView() == GUIComponents.PROCESSED_VIEW) {
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
-			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences);
+			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
+					this.features);
 		} else if (this.gui.getView() == GUIComponents.ALL_VIEW) {
 			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
-			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences);
+			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
+					this.features);
 		}
 
 		// render gui frame
@@ -225,6 +229,7 @@ public class OpenGLARDisplay {
 			this.setFrameToTexture(output.processedFrameBuffer, this.processedFrameEntity, false);
 		}
 		this.correspondences = output.correspondences;
+		this.features = output.features;
 		this.gui.updateFpsLabel(output.fps);
 		this.gui.updateFrameNumLabel(output.frameNum);
 

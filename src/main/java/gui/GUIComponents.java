@@ -109,6 +109,11 @@ public class GUIComponents {
 		this.mapViewButton.setRadioButtonGroup(this.viewButtonGroup);
 		this.allViewButton.setRadioButtonGroup(this.viewButtonGroup);
 
+		this.arViewButton.setChecked(this.view == AR_VIEW);
+		this.processedViewButton.setChecked(this.view == PROCESSED_VIEW);
+		this.mapViewButton.setChecked(this.view == MAP_VIEW);
+		this.allViewButton.setChecked(this.view == ALL_VIEW);
+
 		// handlers for radio buttons
 		this.arViewButton.getListenerMap().addListener(MouseClickEvent.class, (MouseClickEventListener) event -> {
 			this.updateView();

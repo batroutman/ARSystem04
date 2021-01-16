@@ -18,6 +18,7 @@ import runtimevars.Parameters;
 import shaders.StaticShader;
 import toolbox.Maths;
 import types.Correspondence2D2D;
+import types.Feature;
 
 public class Renderer {
 
@@ -83,8 +84,8 @@ public class Renderer {
 		cameraShader.stop();
 	}
 
-	public void renderProcessedView(Entity background, StaticShader bgShader,
-			List<Correspondence2D2D> correspondences) {
+	public void renderProcessedView(Entity background, StaticShader bgShader, List<Correspondence2D2D> correspondences,
+			List<Feature> features) {
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthFunc(GL11.GL_NEVER);
@@ -101,7 +102,9 @@ public class Renderer {
 		GL20.glDisableVertexAttribArray(1);
 		GL30.glBindVertexArray(0);
 		bgShader.stop();
+		this.renderFeatures(features);
 		this.renderCorrespondences(correspondences);
+
 	}
 
 	public void renderCorrespondences(List<Correspondence2D2D> correspondences) {
@@ -110,11 +113,33 @@ public class Renderer {
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 		GL11.glOrtho(0, Parameters.width, Parameters.height, 0, 0, 100);
-//		GL11.glOrtho(0, Parameters.width, -Parameters.height, 0, 0, 100);
 		for (Correspondence2D2D corr : correspondences) {
 			GL11.glBegin(GL11.GL_LINES);
 			GL11.glVertex2d(corr.getX0(), corr.getY0());
 			GL11.glVertex2d(corr.getX1(), corr.getY1());
+			GL11.glEnd();
+		}
+	}
+
+	public void renderFeatures(List<Feature> features) {
+		GL11.glColor3f(0, 0, 1);
+		GL11.glLineWidth(2.0f);
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadIdentity();
+		GL11.glOrtho(0, Parameters.width, Parameters.height, 0, 0, 100);
+		for (Feature feature : features) {
+			double topLeftX = feature.getX() - (feature.getPatchSize() / 2) - 1;
+			double topLeftY = feature.getY() - (feature.getPatchSize() / 2) - 1;
+			double patchSize = feature.getPatchSize() + 2;
+			GL11.glBegin(GL11.GL_LINES);
+			GL11.glVertex2d(topLeftX, topLeftY);
+			GL11.glVertex2d(topLeftX + patchSize, topLeftY);
+			GL11.glVertex2d(topLeftX + patchSize, topLeftY);
+			GL11.glVertex2d(topLeftX + patchSize, topLeftY + patchSize);
+			GL11.glVertex2d(topLeftX + patchSize, topLeftY + patchSize);
+			GL11.glVertex2d(topLeftX, topLeftY + patchSize);
+			GL11.glVertex2d(topLeftX, topLeftY + patchSize);
+			GL11.glVertex2d(topLeftX, topLeftY);
 			GL11.glEnd();
 		}
 	}

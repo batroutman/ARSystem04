@@ -46,5 +46,6 @@ public class PipelineOutput {
 
 	// processed frame data
 	public ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+	public ArrayList<Feature> features = new ArrayList<Feature>();
 
 }
