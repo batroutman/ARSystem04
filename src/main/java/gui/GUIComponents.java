@@ -134,6 +134,7 @@ public class GUIComponents {
 		frame.getContainer().setFocusable(false);
 
 		this.mainWidget.getTitleTextState().setText("Data & Options");
+		this.mainWidget.setCloseable(false);
 
 		frame.getContainer().add(this.mainWidget);
 		this.mainWidget.getContainer().add(this.viewLabel);

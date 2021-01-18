@@ -33,11 +33,13 @@ public class OpenGLARDisplay {
 	Loader loader;
 	Renderer renderer;
 	Camera camera;
+	Camera mapCamera;
 	ArrayList<Entity> entities = new ArrayList<Entity>();
 	StaticShader cameraShader;
 	Entity rawFrameEntity;
 	Entity processedFrameEntity;
 	StaticShader bgShader;
+	StaticShader colorShader;
 
 	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 	ArrayList<Feature> features = new ArrayList<Feature>();
@@ -61,8 +63,10 @@ public class OpenGLARDisplay {
 		this.gui.initGUI();
 
 		this.loader = new Loader();
-		this.cameraShader = new StaticShader(false);
-		this.renderer = new Renderer(this.cameraShader);
+		this.cameraShader = new StaticShader(StaticShader.VERTEX_FILE, StaticShader.FRAGMENT_FILE);
+		this.colorShader = new StaticShader(StaticShader.VERTEX_FILE, StaticShader.COLOR_FRAGMENT_FILE);
+		StaticShader[] shaders = { this.cameraShader, this.colorShader };
+		this.renderer = new Renderer(shaders);
 
 		// temporarily set up cube data (eventually load from blender)
 		float[] vertices = { -0.5f, 0.5f, 0, -0.5f, -0.5f, 0, 0.5f, -0.5f, 0, 0.5f, 0.5f, 0,
@@ -129,6 +133,7 @@ public class OpenGLARDisplay {
 
 		// create camera
 		this.camera = new Camera();
+		this.mapCamera = new Camera();
 
 		// create background data
 		float[] bgVertices = { -1, 1, 0, -1, -1, 0, 1, -1, 0, 1, 1, 0 };
@@ -138,7 +143,7 @@ public class OpenGLARDisplay {
 		float[] bgTextureCoords = { 0, 0, 0, 1, 1, 1, 1, 0 };
 
 		// set up background models
-		this.bgShader = new StaticShader(true);
+		this.bgShader = new StaticShader(StaticShader.BG_VERTEX_FILE, StaticShader.FRAGMENT_FILE);
 		RawModel rawBgModel = this.loader.loadToVAO(bgVertices, bgTextureCoords, bgIndices);
 		TexturedModel rawBgStaticModel = new TexturedModel(rawBgModel,
 				new ModelTexture(this.loader.loadTexture("sample_texture")));
@@ -156,16 +161,23 @@ public class OpenGLARDisplay {
 		context.updateGlfwWindow();
 		this.renderer.prepare();
 		if (this.gui.getView() == GUIComponents.AR_VIEW) {
+
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
+
 		} else if (this.gui.getView() == GUIComponents.PROCESSED_VIEW) {
+
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
 					this.features);
+
 		} else if (this.gui.getView() == GUIComponents.MAP_VIEW) {
+
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
-			this.renderer.renderMapView(this.camera, this.cameraShader, this.mapPoints);
+			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, 3);
+
 		} else if (this.gui.getView() == GUIComponents.ALL_VIEW) {
+
 			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
@@ -173,7 +185,8 @@ public class OpenGLARDisplay {
 					this.features);
 			GL11.glViewport(Parameters.screenWidth / 2, Parameters.screenHeight / 2, Parameters.screenWidth / 2,
 					Parameters.screenHeight / 2);
-			this.renderer.renderMapView(this.camera, this.cameraShader, this.mapPoints);
+			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, 2);
+
 		}
 
 		// render gui frame
@@ -211,6 +224,7 @@ public class OpenGLARDisplay {
 	public void setCameraPose(double r00, double r01, double r02, double r10, double r11, double r12, double r20,
 			double r21, double r22, double tx, double ty, double tz) {
 		this.camera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz);
+		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz + 1);
 	}
 
 	public void detectChanges() {

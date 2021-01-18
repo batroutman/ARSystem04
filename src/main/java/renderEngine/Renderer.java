@@ -30,11 +30,13 @@ public class Renderer {
 
 	private Matrix4f projectionMatrix;
 
-	public Renderer(StaticShader shader) {
+	public Renderer(StaticShader[] perspectiveShaders) {
 		createProjectionMatrix();
-		shader.start();
-		shader.loadProjectionMatrix(projectionMatrix);
-		shader.stop();
+		for (StaticShader shader : perspectiveShaders) {
+			shader.start();
+			shader.loadProjectionMatrix(projectionMatrix);
+			shader.stop();
+		}
 	}
 
 	public void prepare() {
@@ -146,19 +148,20 @@ public class Renderer {
 		}
 	}
 
-	public void renderMapView(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints) {
+	public void renderMapView(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints, float pointSize) {
 
-		GL11.glColor3f(0, 0, 1);
-		GL11.glPointSize(2.0f);
+		GL11.glPointSize(pointSize);
 
 //		GL11.glScissor(0,0,0,0);
 //		GL11.glEnable(GL11.GL_SCISSOR_TEST);
 //		GL11.glClearColor(1, 1, 1, 1);
 //		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 //		GL11.glDisable(GL11.GL_SCISSOR_TEST);
-
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthFunc(GL11.GL_LEQUAL);
 		cameraShader.start();
 		cameraShader.loadViewMatrix(mapCamera);
+		cameraShader.loadCustomColor(new Vector3f(0.2f, 0.2f, 1));
 		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(0, 0, 0), 0, 0, 0, 1);
 		cameraShader.loadTransformationMatrix(transformationMatrix);
 		GL11.glBegin(GL11.GL_POINTS);
