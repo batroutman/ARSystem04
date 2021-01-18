@@ -48,4 +48,7 @@ public class PipelineOutput {
 	public ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 	public ArrayList<Feature> features = new ArrayList<Feature>();
 
+	// map data
+	public ArrayList<Point3D> points = new ArrayList<Point3D>();
+
 }

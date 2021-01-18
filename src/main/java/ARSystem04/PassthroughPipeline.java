@@ -10,6 +10,7 @@ import types.Correspondence2D2D;
 import types.Feature;
 import types.FramePack;
 import types.PipelineOutput;
+import types.Point3D;
 
 public class PassthroughPipeline extends PoseEstimator {
 
@@ -72,6 +73,15 @@ public class PassthroughPipeline extends PoseEstimator {
 
 			this.tz -= 0.003;
 			po.tz = this.tz;
+
+			// map points
+			po.points.add(new Point3D(1, 1, 10));
+			for (int i = 0; i < 1000; i++) {
+				double x = rand.nextDouble() * 2 - 1;
+				double y = rand.nextDouble() * 2 - 1;
+				double z = rand.nextDouble() * 4 - 1;
+				po.points.add(new Point3D(x, y, z));
+			}
 
 			try {
 				Thread.sleep(33);

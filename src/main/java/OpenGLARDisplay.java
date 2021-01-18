@@ -24,6 +24,7 @@ import textures.ModelTexture;
 import types.Correspondence2D2D;
 import types.Feature;
 import types.PipelineOutput;
+import types.Point3D;
 
 public class OpenGLARDisplay {
 
@@ -40,6 +41,7 @@ public class OpenGLARDisplay {
 
 	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 	ArrayList<Feature> features = new ArrayList<Feature>();
+	ArrayList<Point3D> mapPoints = new ArrayList<Point3D>();
 
 	// legui
 	GUIComponents gui = new GUIComponents();
@@ -56,7 +58,6 @@ public class OpenGLARDisplay {
 	public void initOpenGL() {
 
 		// initialize
-//		DisplayManager.createDisplay(Parameters.width, Parameters.height);
 		this.gui.initGUI();
 
 		this.loader = new Loader();
@@ -161,12 +162,18 @@ public class OpenGLARDisplay {
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
 					this.features);
+		} else if (this.gui.getView() == GUIComponents.MAP_VIEW) {
+			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
+			this.renderer.renderMapView(this.camera, this.cameraShader, this.mapPoints);
 		} else if (this.gui.getView() == GUIComponents.ALL_VIEW) {
 			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
 					this.features);
+			GL11.glViewport(Parameters.screenWidth / 2, Parameters.screenHeight / 2, Parameters.screenWidth / 2,
+					Parameters.screenHeight / 2);
+			this.renderer.renderMapView(this.camera, this.cameraShader, this.mapPoints);
 		}
 
 		// render gui frame
@@ -230,6 +237,8 @@ public class OpenGLARDisplay {
 		}
 		this.correspondences = output.correspondences;
 		this.features = output.features;
+		this.mapPoints = output.points;
+
 		this.gui.updateFpsLabel(output.fps);
 		this.gui.updateFrameNumLabel(output.frameNum);
 

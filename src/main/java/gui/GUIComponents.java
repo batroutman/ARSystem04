@@ -90,7 +90,7 @@ public class GUIComponents {
 
 	// initialize the main widget that contains diagnostic data and options
 	private Frame createFrameWithGUI() {
-		Frame frame = new Frame(Parameters.width, Parameters.height);
+		Frame frame = new Frame(Parameters.screenWidth, Parameters.screenHeight);
 
 		for (int i = 0; i < this.order.length; i++) {
 			this.order[i].setPosition(10, 20 * i + 10);

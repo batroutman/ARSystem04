@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -19,6 +20,7 @@ import shaders.StaticShader;
 import toolbox.Maths;
 import types.Correspondence2D2D;
 import types.Feature;
+import types.Point3D;
 
 public class Renderer {
 
@@ -37,8 +39,8 @@ public class Renderer {
 
 	public void prepare() {
 
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL11.glClearColor(0, 0.0f, 0.0f, 1);
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
 	}
 
@@ -142,6 +144,30 @@ public class Renderer {
 			GL11.glVertex2d(topLeftX, topLeftY);
 			GL11.glEnd();
 		}
+	}
+
+	public void renderMapView(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints) {
+
+		GL11.glColor3f(0, 0, 1);
+		GL11.glPointSize(2.0f);
+
+//		GL11.glScissor(0,0,0,0);
+//		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+//		GL11.glClearColor(1, 1, 1, 1);
+//		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+//		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+
+		cameraShader.start();
+		cameraShader.loadViewMatrix(mapCamera);
+		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(0, 0, 0), 0, 0, 0, 1);
+		cameraShader.loadTransformationMatrix(transformationMatrix);
+		GL11.glBegin(GL11.GL_POINTS);
+		for (Point3D point : mapPoints) {
+			GL11.glVertex3d(point.getX(), point.getY(), point.getZ());
+		}
+		GL11.glEnd();
+
+		cameraShader.stop();
 	}
 
 	private void createProjectionMatrix() {
