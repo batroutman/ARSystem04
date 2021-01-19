@@ -1,6 +1,6 @@
 import org.opencv.core.Core;
 
-import ARSystem04.PassthroughPipeline;
+import ARSystem04.MockPipeline;
 import ARSystem04.PoseEstimator;
 import buffers.Buffer;
 import buffers.SingletonBuffer;
@@ -19,9 +19,9 @@ public class ARBootstrapper {
 	public void start() {
 
 		// OfflineFrameBuffer ofb = new OfflineFrameBuffer(filename, false);
-		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
+//		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
 		Buffer<PipelineOutput> outputBuffer = new SingletonBuffer<PipelineOutput>();
-		PoseEstimator pipeline = new PassthroughPipeline(tumBuffer, outputBuffer);
+		PoseEstimator pipeline = new MockPipeline(null, outputBuffer);
 		// ARPipeline pipeline = new MockPipeline(sfb, spb, sfb);
 		OpenGLARDisplay ARDisplay = new OpenGLARDisplay(outputBuffer);
 

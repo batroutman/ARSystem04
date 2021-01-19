@@ -16,6 +16,10 @@ public class Pose {
 	double Cy;
 	double Cz;
 
+	public double rx = 0;
+	public double ry = 0;
+	public double rz = 0;
+
 	boolean fixed = false;
 
 	public Pose() {
@@ -207,6 +211,18 @@ public class Pose {
 
 	public double getRotZ() {
 		return Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+	}
+
+	public double getRotXDeg() {
+		return this.getRotX() * 180 / Math.PI;
+	}
+
+	public double getRotYDeg() {
+		return this.getRotY() * 180 / Math.PI;
+	}
+
+	public double getRotZDeg() {
+		return this.getRotZ() * 180 / Math.PI;
 	}
 
 	public void setT(double tx, double ty, double tz) {

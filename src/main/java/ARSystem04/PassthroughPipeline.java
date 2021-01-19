@@ -19,6 +19,7 @@ public class PassthroughPipeline extends PoseEstimator {
 
 	int frameNum = 0;
 	double tz = 0;
+	double t = 0;
 	double qw = 0.707;
 	double rotY = 0;
 	Matrix rotation = new Matrix(4, 1);
@@ -38,8 +39,19 @@ public class PassthroughPipeline extends PoseEstimator {
 	public PassthroughPipeline(Buffer<FramePack> inputBuffer, Buffer<PipelineOutput> outputBuffer) {
 		super(inputBuffer, outputBuffer);
 		rotation.set(0, 0, 1);
-		rotChange.set(0, 0, 0.995);
-		rotChange.set(2, 0, 0.096);
+
+		// rotate x
+//		rotChange.set(0, 0, 1);
+//		rotChange.set(1, 0, 0.009);
+
+		// rotate y
+//		rotChange.set(0, 0, 1);
+//		rotChange.set(2, 0, 0.009);
+//
+		// rotate z
+		rotChange.set(0, 0, 1);
+		rotChange.set(3, 0, 0.009);
+		rotChange = rotChange.times(1 / rotChange.normF());
 	}
 
 	@Override
@@ -81,9 +93,6 @@ public class PassthroughPipeline extends PoseEstimator {
 				po.features.add(new Feature(x1, y1, (int) (15 * rand.nextDouble()) + 5));
 			}
 
-//			this.tz -= 0.003;
-			po.tz = this.tz;
-
 			// map points
 			po.points.add(new Point3D(1, 1, 10));
 			for (int i = 0; i < 1000; i++) {
@@ -93,23 +102,19 @@ public class PassthroughPipeline extends PoseEstimator {
 				po.points.add(new Point3D(x, y, z));
 			}
 
-			// keyframe cameras
+			// pose
 			Pose pose = new Pose();
-			rotation.print(15, 5);
-
 			pose.setQw(rotation.get(0, 0));
 			pose.setQx(rotation.get(1, 0));
 			pose.setQy(rotation.get(2, 0));
 			pose.setQz(rotation.get(3, 0));
-
-			Utils.pl("float: " + (float) 1.2868690386841046);
-			Utils.pl("pose rotation in euler ==> rotX: " + pose.getRotX() + "  rotY: " + pose.getRotY() + "  rotZ: "
-					+ pose.getRotZ());
-			po.cameras.add(pose);
+//			pose.setCz(t);
+//			t -= 0.01;
+			po.pose = pose;
 			rotation = Utils.quatMult(rotChange, rotation);
 
 			try {
-				Thread.sleep(32);
+				Thread.sleep(100);
 			} catch (Exception e) {
 			}
 

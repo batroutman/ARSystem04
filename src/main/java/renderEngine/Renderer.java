@@ -151,9 +151,12 @@ public class Renderer {
 	}
 
 	public void renderMapView(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints, List<Pose> poses,
-			float pointSize) {
+			Pose mainPose, float pointSize) {
 		this.renderMapPoints(mapCamera, cameraShader, mapPoints, pointSize);
 		this.renderCameras(mapCamera, cameraShader, poses, pointSize);
+		this.renderCamera(mapCamera, cameraShader, (float) mainPose.getRotXDeg(), (float) mainPose.getRotYDeg(),
+				(float) mainPose.getRotZDeg(), (float) mainPose.getCx(), (float) mainPose.getCy(),
+				(float) mainPose.getCz(), pointSize, 1, 0.5f, 0);
 	}
 
 	public void renderMapPoints(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints, float pointSize) {
@@ -179,14 +182,15 @@ public class Renderer {
 	public void renderCameras(Camera mapCamera, StaticShader cameraShader, List<Pose> poses, float lineWidth) {
 		for (Pose pose : poses) {
 			Utils.pl("yeet");
-			this.renderCamera(mapCamera, cameraShader, (float) pose.getRotX(), (float) pose.getRotY(),
-					(float) pose.getRotZ(), (float) pose.getCx(), (float) pose.getCy(), (float) pose.getCz(),
-					lineWidth);
+			this.renderCamera(mapCamera, cameraShader, (float) pose.getRotXDeg(), (float) pose.getRotYDeg(),
+					(float) pose.getRotZDeg(), (float) pose.getCx(), (float) pose.getCy(), (float) pose.getCz(),
+					lineWidth, 1, 0, 0);
 		}
 	}
 
 	public void renderCamera(Camera mapCamera, StaticShader cameraShader, float rx, float ry, float rz, float Cx,
-			float Cy, float Cz, float lineWidth) {
+			float Cy, float Cz, float lineWidth, float R, float G, float B) {
+		// (RGB values from 0 to 1)
 
 		float wBy2 = Parameters.width / 2;
 		float hBy2 = Parameters.height / 2;
@@ -197,8 +201,7 @@ public class Renderer {
 		GL11.glDepthFunc(GL11.GL_LEQUAL);
 		cameraShader.start();
 		cameraShader.loadViewMatrix(mapCamera);
-		cameraShader.loadCustomColor(new Vector3f(1f, 0.2f, 0.2f));
-		Utils.pl("rotX: " + rx + "  rotY: " + ry + "  rotZ: " + rz);
+		cameraShader.loadCustomColor(new Vector3f(R, G, B));
 		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(Cx, Cy, Cz), rx, ry, rz, 0.001f);
 		cameraShader.loadTransformationMatrix(transformationMatrix);
 

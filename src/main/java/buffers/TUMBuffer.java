@@ -14,7 +14,7 @@ import types.FramePack;
 public class TUMBuffer implements Buffer<FramePack> {
 
 	// DEBUG: limit the number of frames to pre-load
-	long frameLimit = 300;
+	long frameLimit = 500;
 
 	// preloaded frames
 	ArrayList<FramePack> frames = new ArrayList<FramePack>();

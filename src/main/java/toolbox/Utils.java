@@ -47,24 +47,25 @@ public class Utils {
 	}
 
 	// quaternion multiplication, assuming column vector of format [qw, qx, qy,
-	// qz].transpose() (q*r)
-	public static Matrix quatMult(Matrix q, Matrix r) {
+	// qz].transpose() (q1*q2)
+	public static Matrix quatMult(Matrix q1, Matrix q2) {
 
 		Matrix t = new Matrix(4, 1);
 
-		double q0 = q.get(0, 0);
-		double q1 = q.get(1, 0);
-		double q2 = q.get(2, 0);
-		double q3 = q.get(3, 0);
-		double r0 = r.get(0, 0);
-		double r1 = r.get(1, 0);
-		double r2 = r.get(2, 0);
-		double r3 = r.get(3, 0);
+		double q1w = q1.get(0, 0);
+		double q1x = q1.get(1, 0);
+		double q1y = q1.get(2, 0);
+		double q1z = q1.get(3, 0);
 
-		t.set(0, 0, r0 * q0 - r1 * q1 - r2 * q2 - r3 * q3);
-		t.set(1, 0, r0 * q1 + r1 * q0 - r2 * q3 + r3 * q2);
-		t.set(2, 0, r0 * q2 + r1 * q3 + r2 * q0 - r3 * q1);
-		t.set(3, 0, r0 * q3 - r1 * q2 + r2 * q1 + r3 * q0);
+		double q2w = q2.get(0, 0);
+		double q2x = q2.get(1, 0);
+		double q2y = q2.get(2, 0);
+		double q2z = q2.get(3, 0);
+
+		t.set(1, 0, q1x * q2w + q1y * q2z - q1z * q2y + q1w * q2x);
+		t.set(2, 0, -q1x * q2z + q1y * q2w + q1z * q2x + q1w * q2y);
+		t.set(3, 0, q1x * q2y - q1y * q2x + q1z * q2w + q1w * q2z);
+		t.set(0, 0, -q1x * q2x - q1y * q2y - q1z * q2z + q1w * q2w);
 
 		t = t.times(1 / t.normF());
 

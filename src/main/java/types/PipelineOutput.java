@@ -19,24 +19,7 @@ public class PipelineOutput {
 	public boolean tracking = false;
 
 	// pose params
-	public double qw = 1;
-	public double qx = 0;
-	public double qy = 0;
-	public double qz = 0;
-
-	public double r00 = 1;
-	public double r01 = 0;
-	public double r02 = 0;
-	public double r10 = 0;
-	public double r11 = 1;
-	public double r12 = 0;
-	public double r20 = 0;
-	public double r21 = 0;
-	public double r22 = 1;
-
-	public double tx = 0;
-	public double ty = 0;
-	public double tz = 0;
+	public Pose pose = new Pose();
 
 	// frame data
 	public Mat rawFrame = null;
