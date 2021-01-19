@@ -50,5 +50,6 @@ public class PipelineOutput {
 
 	// map data
 	public ArrayList<Point3D> points = new ArrayList<Point3D>();
+	public ArrayList<Pose> cameras = new ArrayList<Pose>();
 
 }

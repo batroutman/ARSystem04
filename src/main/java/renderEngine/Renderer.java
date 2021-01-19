@@ -18,9 +18,11 @@ import runtimevars.CameraIntrinsics;
 import runtimevars.Parameters;
 import shaders.StaticShader;
 import toolbox.Maths;
+import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.Feature;
 import types.Point3D;
+import types.Pose;
 
 public class Renderer {
 
@@ -41,7 +43,7 @@ public class Renderer {
 
 	public void prepare() {
 
-		GL11.glClearColor(0, 0.0f, 0.0f, 1);
+		GL11.glClearColor(1, 1, 1, 1);
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
 	}
@@ -148,15 +150,16 @@ public class Renderer {
 		}
 	}
 
-	public void renderMapView(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints, float pointSize) {
+	public void renderMapView(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints, List<Pose> poses,
+			float pointSize) {
+		this.renderMapPoints(mapCamera, cameraShader, mapPoints, pointSize);
+		this.renderCameras(mapCamera, cameraShader, poses, pointSize);
+	}
+
+	public void renderMapPoints(Camera mapCamera, StaticShader cameraShader, List<Point3D> mapPoints, float pointSize) {
 
 		GL11.glPointSize(pointSize);
 
-//		GL11.glScissor(0,0,0,0);
-//		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-//		GL11.glClearColor(1, 1, 1, 1);
-//		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-//		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthFunc(GL11.GL_LEQUAL);
 		cameraShader.start();
@@ -168,6 +171,55 @@ public class Renderer {
 		for (Point3D point : mapPoints) {
 			GL11.glVertex3d(point.getX(), point.getY(), point.getZ());
 		}
+		GL11.glEnd();
+
+		cameraShader.stop();
+	}
+
+	public void renderCameras(Camera mapCamera, StaticShader cameraShader, List<Pose> poses, float lineWidth) {
+		for (Pose pose : poses) {
+			Utils.pl("yeet");
+			this.renderCamera(mapCamera, cameraShader, (float) pose.getRotX(), (float) pose.getRotY(),
+					(float) pose.getRotZ(), (float) pose.getCx(), (float) pose.getCy(), (float) pose.getCz(),
+					lineWidth);
+		}
+	}
+
+	public void renderCamera(Camera mapCamera, StaticShader cameraShader, float rx, float ry, float rz, float Cx,
+			float Cy, float Cz, float lineWidth) {
+
+		float wBy2 = Parameters.width / 2;
+		float hBy2 = Parameters.height / 2;
+		float f = CameraIntrinsics.fx;
+
+		GL11.glLineWidth(lineWidth);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthFunc(GL11.GL_LEQUAL);
+		cameraShader.start();
+		cameraShader.loadViewMatrix(mapCamera);
+		cameraShader.loadCustomColor(new Vector3f(1f, 0.2f, 0.2f));
+		Utils.pl("rotX: " + rx + "  rotY: " + ry + "  rotZ: " + rz);
+		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(Cx, Cy, Cz), rx, ry, rz, 0.001f);
+		cameraShader.loadTransformationMatrix(transformationMatrix);
+
+		GL11.glBegin(GL11.GL_LINES);
+		GL11.glVertex3f(0, 0, 0);
+		GL11.glVertex3f(wBy2, hBy2, f);
+		GL11.glVertex3f(0, 0, 0);
+		GL11.glVertex3f(-wBy2, hBy2, f);
+		GL11.glVertex3f(0, 0, 0);
+		GL11.glVertex3f(-wBy2, -hBy2, f);
+		GL11.glVertex3f(0, 0, 0);
+		GL11.glVertex3f(wBy2, -hBy2, f);
+
+		GL11.glVertex3f(wBy2, hBy2, f);
+		GL11.glVertex3f(-wBy2, hBy2, f);
+		GL11.glVertex3f(-wBy2, hBy2, f);
+		GL11.glVertex3f(-wBy2, -hBy2, f);
+		GL11.glVertex3f(-wBy2, -hBy2, f);
+		GL11.glVertex3f(wBy2, -hBy2, f);
+		GL11.glVertex3f(wBy2, -hBy2, f);
+		GL11.glVertex3f(wBy2, hBy2, f);
 		GL11.glEnd();
 
 		cameraShader.stop();

@@ -25,6 +25,7 @@ import types.Correspondence2D2D;
 import types.Feature;
 import types.PipelineOutput;
 import types.Point3D;
+import types.Pose;
 
 public class OpenGLARDisplay {
 
@@ -44,6 +45,7 @@ public class OpenGLARDisplay {
 	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 	ArrayList<Feature> features = new ArrayList<Feature>();
 	ArrayList<Point3D> mapPoints = new ArrayList<Point3D>();
+	ArrayList<Pose> poses = new ArrayList<Pose>();
 
 	// legui
 	GUIComponents gui = new GUIComponents();
@@ -174,7 +176,7 @@ public class OpenGLARDisplay {
 		} else if (this.gui.getView() == GUIComponents.MAP_VIEW) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
-			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, 3);
+			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, 3);
 
 		} else if (this.gui.getView() == GUIComponents.ALL_VIEW) {
 
@@ -185,7 +187,7 @@ public class OpenGLARDisplay {
 					this.features);
 			GL11.glViewport(Parameters.screenWidth / 2, Parameters.screenHeight / 2, Parameters.screenWidth / 2,
 					Parameters.screenHeight / 2);
-			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, 2);
+			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, 2);
 
 		}
 
@@ -224,7 +226,7 @@ public class OpenGLARDisplay {
 	public void setCameraPose(double r00, double r01, double r02, double r10, double r11, double r12, double r20,
 			double r21, double r22, double tx, double ty, double tz) {
 		this.camera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz);
-		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz + 1);
+		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz + 5);
 	}
 
 	public void detectChanges() {
@@ -252,6 +254,7 @@ public class OpenGLARDisplay {
 		this.correspondences = output.correspondences;
 		this.features = output.features;
 		this.mapPoints = output.points;
+		this.poses = output.cameras;
 
 		this.gui.updateFpsLabel(output.fps);
 		this.gui.updateFrameNumLabel(output.frameNum);

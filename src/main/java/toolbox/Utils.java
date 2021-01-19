@@ -46,4 +46,29 @@ public class Utils {
 		pl("");
 	}
 
+	// quaternion multiplication, assuming column vector of format [qw, qx, qy,
+	// qz].transpose() (q*r)
+	public static Matrix quatMult(Matrix q, Matrix r) {
+
+		Matrix t = new Matrix(4, 1);
+
+		double q0 = q.get(0, 0);
+		double q1 = q.get(1, 0);
+		double q2 = q.get(2, 0);
+		double q3 = q.get(3, 0);
+		double r0 = r.get(0, 0);
+		double r1 = r.get(1, 0);
+		double r2 = r.get(2, 0);
+		double r3 = r.get(3, 0);
+
+		t.set(0, 0, r0 * q0 - r1 * q1 - r2 * q2 - r3 * q3);
+		t.set(1, 0, r0 * q1 + r1 * q0 - r2 * q3 + r3 * q2);
+		t.set(2, 0, r0 * q2 + r1 * q3 + r2 * q0 - r3 * q1);
+		t.set(3, 0, r0 * q3 - r1 * q2 + r2 * q1 + r3 * q0);
+
+		t = t.times(1 / t.normF());
+
+		return t;
+	}
+
 }
