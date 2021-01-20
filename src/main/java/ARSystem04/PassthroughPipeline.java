@@ -9,7 +9,6 @@ import buffers.SingletonBuffer;
 import runtimevars.Parameters;
 import toolbox.Utils;
 import types.Correspondence2D2D;
-import types.Feature;
 import types.FramePack;
 import types.PipelineOutput;
 import types.Point3D;
@@ -90,7 +89,7 @@ public class PassthroughPipeline extends PoseEstimator {
 				double x1 = rand.nextDouble() * Parameters.width;
 				double y1 = rand.nextDouble() * Parameters.height;
 				po.correspondences.add(new Correspondence2D2D(x0, y0, x1, y1));
-				po.features.add(new Feature(x1, y1, (int) (15 * rand.nextDouble()) + 5));
+//				po.features.add(new Feature(x1, y1, (int) (15 * rand.nextDouble()) + 5));
 			}
 
 			// map points

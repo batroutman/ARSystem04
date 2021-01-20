@@ -1,7 +1,10 @@
 import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.highgui.HighGui;
 
-import ARSystem04.MockPipeline;
+import ARSystem04.ImageProcessor;
 import ARSystem04.PoseEstimator;
+import ARSystem04.TestPipeline;
 import buffers.Buffer;
 import buffers.SingletonBuffer;
 import buffers.TUMBuffer;
@@ -19,9 +22,9 @@ public class ARBootstrapper {
 	public void start() {
 
 		// OfflineFrameBuffer ofb = new OfflineFrameBuffer(filename, false);
-//		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
+		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
 		Buffer<PipelineOutput> outputBuffer = new SingletonBuffer<PipelineOutput>();
-		PoseEstimator pipeline = new MockPipeline(null, outputBuffer);
+		PoseEstimator pipeline = new TestPipeline(tumBuffer, outputBuffer);
 		// ARPipeline pipeline = new MockPipeline(sfb, spb, sfb);
 		OpenGLARDisplay ARDisplay = new OpenGLARDisplay(outputBuffer);
 
@@ -44,18 +47,18 @@ public class ARBootstrapper {
 
 	public void tests() {
 		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
+		ImageProcessor imgProc = new ImageProcessor();
 		FramePack fp = tumBuffer.getNext();
-		pl(fp.getRawFrame().rows()); // 480
-		pl(fp.getRawFrame().cols()); // 640
-		pl(fp.getRawFrame().get(0, 0).length); // 3
-		pl(fp.getRawFrame().get(0, 0)[0]); // 157.0 (B)
-		pl(fp.getRawFrame().get(0, 0)[1]); // 161.0 (G)
-		pl(fp.getRawFrame().get(0, 0)[2]); // 158.0 (R)
-		pl("");
-		pl(fp.getProcessedFrame().rows()); // 480
-		pl(fp.getProcessedFrame().cols()); // 640
-		pl(fp.getProcessedFrame().get(0, 0).length); // 1
-		pl(fp.getProcessedFrame().get(0, 0)[0]); // 160
+		Mat frame = fp.getRawFrame();
+		frame = imgProc.downScale(frame);
+		frame = imgProc.downScale(frame);
+		frame = imgProc.downScale(frame);
+
+		frame = imgProc.upScale(frame);
+		frame = imgProc.upScale(frame);
+		frame = imgProc.upScale(frame);
+		HighGui.imshow("test", frame);
+		char c = (char) HighGui.waitKey(0);
 
 	}
 

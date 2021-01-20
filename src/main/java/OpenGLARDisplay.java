@@ -3,12 +3,14 @@ import static org.lwjgl.glfw.GLFW.glfwTerminate;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.joml.Vector3f;
 import org.liquidengine.legui.system.context.Context;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
+import org.opencv.core.KeyPoint;
 
 import buffers.Buffer;
 import entities.Camera;
@@ -22,7 +24,6 @@ import runtimevars.Parameters;
 import shaders.StaticShader;
 import textures.ModelTexture;
 import types.Correspondence2D2D;
-import types.Feature;
 import types.PipelineOutput;
 import types.Point3D;
 import types.Pose;
@@ -43,10 +44,10 @@ public class OpenGLARDisplay {
 	StaticShader colorShader;
 
 	Pose pose = new Pose();
-	ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
-	ArrayList<Feature> features = new ArrayList<Feature>();
-	ArrayList<Point3D> mapPoints = new ArrayList<Point3D>();
-	ArrayList<Pose> poses = new ArrayList<Pose>();
+	List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+	List<KeyPoint> features = new ArrayList<KeyPoint>();
+	List<Point3D> mapPoints = new ArrayList<Point3D>();
+	List<Pose> poses = new ArrayList<Pose>();
 
 	// legui
 	GUIComponents gui = new GUIComponents();
@@ -113,8 +114,8 @@ public class OpenGLARDisplay {
 		RawModel tModel = this.loader.loadToVAO(vertices, textureCoords, indices);
 		TexturedModel tStaticModel = new TexturedModel(tModel,
 				new ModelTexture(this.loader.loadTexture("solid_colors_64")));
-//		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
-		Entity tEntity = new Entity(tStaticModel, new Vector3f(0, 0, 1.5f), 0, 0, 0, 0.5f);
+		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
+//		Entity tEntity = new Entity(tStaticModel, new Vector3f(0, 0, 1.5f), 0, 0, 0, 0.5f);
 		this.entities.add(tEntity);
 
 		Random rand = new Random(100);
@@ -262,6 +263,7 @@ public class OpenGLARDisplay {
 
 		this.gui.updateFpsLabel(output.fps);
 		this.gui.updateFrameNumLabel(output.frameNum);
+		this.gui.updateNumFeaturesLabel(output.numFeatures);
 
 	}
 

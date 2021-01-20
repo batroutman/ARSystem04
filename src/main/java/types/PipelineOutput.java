@@ -1,7 +1,9 @@
 package types;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 
 // PipelineOutput is a type that packages all information that the desktop container may display for any single frame
@@ -28,11 +30,11 @@ public class PipelineOutput {
 	public byte[] processedFrameBuffer = null;
 
 	// processed frame data
-	public ArrayList<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
-	public ArrayList<Feature> features = new ArrayList<Feature>();
+	public List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+	public List<KeyPoint> features = new ArrayList<KeyPoint>();
 
 	// map data
-	public ArrayList<Point3D> points = new ArrayList<Point3D>();
-	public ArrayList<Pose> cameras = new ArrayList<Pose>();
+	public List<Point3D> points = new ArrayList<Point3D>();
+	public List<Pose> cameras = new ArrayList<Pose>();
 
 }

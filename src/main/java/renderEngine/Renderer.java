@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.opencv.core.KeyPoint;
 
 import entities.Camera;
 import entities.Entity;
@@ -19,7 +20,6 @@ import runtimevars.Parameters;
 import shaders.StaticShader;
 import toolbox.Maths;
 import types.Correspondence2D2D;
-import types.Feature;
 import types.Point3D;
 import types.Pose;
 
@@ -90,7 +90,7 @@ public class Renderer {
 	}
 
 	public void renderProcessedView(Entity background, StaticShader bgShader, List<Correspondence2D2D> correspondences,
-			List<Feature> features) {
+			List<KeyPoint> features) {
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthFunc(GL11.GL_NEVER);
@@ -126,16 +126,16 @@ public class Renderer {
 		}
 	}
 
-	public void renderFeatures(List<Feature> features) {
+	public void renderFeatures(List<KeyPoint> features) {
 		GL11.glColor3f(0, 0, 1);
 		GL11.glLineWidth(2.0f);
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 		GL11.glOrtho(0, Parameters.width, Parameters.height, 0, 0, 100);
-		for (Feature feature : features) {
-			double topLeftX = feature.getX() - (feature.getPatchSize() / 2) - 1;
-			double topLeftY = feature.getY() - (feature.getPatchSize() / 2) - 1;
-			double patchSize = feature.getPatchSize() + 2;
+		for (KeyPoint feature : features) {
+			double topLeftX = feature.pt.x - (feature.size / 2) - 1;
+			double topLeftY = feature.pt.y - (feature.size / 2) - 1;
+			double patchSize = feature.size + 2;
 			GL11.glBegin(GL11.GL_LINES);
 			GL11.glVertex2d(topLeftX, topLeftY);
 			GL11.glVertex2d(topLeftX + patchSize, topLeftY);

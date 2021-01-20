@@ -32,7 +32,6 @@ import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.system.CallbackI.V;
 
 import runtimevars.Parameters;
 
@@ -48,7 +47,7 @@ public class GUIComponents {
 		AR, PROCESSED, MAP, ALL
 	};
 
-	VIEW view = VIEW.MAP;
+	VIEW view = VIEW.ALL;
 
 	private Widget mainWidget = new Widget(20, 20, 200, 400);
 	private Label viewLabel = new Label(10, 10, 100, 10);
@@ -59,9 +58,10 @@ public class GUIComponents {
 	private RadioButton allViewButton = new RadioButton(10, 10, 100, 10);
 	private Label frameNumLabel = new Label(10, 10, 100, 10);
 	private Label fpsLabel = new Label(10, 10, 100, 10);
+	private Label numFeaturesLabel = new Label(10, 10, 100, 10);
 
 	Component[] order = { viewLabel, arViewButton, processedViewButton, mapViewButton, allViewButton, frameNumLabel,
-			fpsLabel };
+			fpsLabel, numFeaturesLabel };
 
 	public GUIComponents() {
 
@@ -104,6 +104,7 @@ public class GUIComponents {
 		this.allViewButton.getTextState().setText("All Views");
 		this.frameNumLabel.getTextState().setText("Frame #: --");
 		this.fpsLabel.getTextState().setText("Framerate: --");
+		this.numFeaturesLabel.getTextState().setText("Number of Features: --");
 
 		this.arViewButton.setRadioButtonGroup(this.viewButtonGroup);
 		this.processedViewButton.setRadioButtonGroup(this.viewButtonGroup);
@@ -145,6 +146,7 @@ public class GUIComponents {
 		this.mainWidget.getContainer().add(this.allViewButton);
 		this.mainWidget.getContainer().add(this.fpsLabel);
 		this.mainWidget.getContainer().add(this.frameNumLabel);
+		this.mainWidget.getContainer().add(this.numFeaturesLabel);
 		return frame;
 	}
 
@@ -223,6 +225,10 @@ public class GUIComponents {
 
 	public void updateFpsLabel(double fps) {
 		this.fpsLabel.getTextState().setText("Framerate:        " + fps + " fps");
+	}
+
+	public void updateNumFeaturesLabel(int numFeatures) {
+		this.numFeaturesLabel.getTextState().setText("Number of Features:        " + numFeatures);
 	}
 
 	public long getWindow() {
