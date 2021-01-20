@@ -1,17 +1,25 @@
 package ARSystem04;
 
+import java.util.ArrayList;
+
 import Jama.Matrix;
 import buffers.Buffer;
 import buffers.QueuedBuffer;
 import buffers.SingletonBuffer;
 import types.FramePack;
 import types.PipelineOutput;
+import types.Point3D;
 import types.Pose;
 
 public class MockPipeline extends PoseEstimator {
 
 	int frameNum = 0;
 	MockPointData mock = new MockPointData();
+
+	// quaternion orientation
+	Matrix orientation = new Matrix(4, 1);
+
+	ArrayList<Pose> keyframes = new ArrayList<Pose>();
 
 	Thread poseEstimationThread = new Thread() {
 		@Override
@@ -26,7 +34,7 @@ public class MockPipeline extends PoseEstimator {
 
 	public MockPipeline(Buffer<FramePack> inputBuffer, Buffer<PipelineOutput> outputBuffer) {
 		super(inputBuffer, outputBuffer);
-
+		this.orientation.set(0, 0, 1);
 	}
 
 	@Override
@@ -55,6 +63,7 @@ public class MockPipeline extends PoseEstimator {
 			po.rawFrameBuffer = this.mock.getImageBufferRGB(frameNum);
 			po.processedFrameBuffer = this.mock.getImageBufferGrey(frameNum);
 
+			// pose
 			Matrix poseQuat = this.mock.getQuaternion(frameNum);
 			Matrix IC = this.mock.getIC(frameNum);
 			Pose pose = new Pose();
@@ -62,14 +71,43 @@ public class MockPipeline extends PoseEstimator {
 			pose.setQx(poseQuat.get(1, 0));
 			pose.setQy(poseQuat.get(2, 0));
 			pose.setQz(poseQuat.get(3, 0));
-			pose.setCx(IC.get(0, 3));
-			pose.setCy(IC.get(1, 3));
-			pose.setCz(IC.get(2, 3));
+			pose.setCx(-IC.get(0, 3));
+			pose.setCy(-IC.get(1, 3));
+			pose.setCz(-IC.get(2, 3));
 			po.pose = pose;
-			pose.getHomogeneousMatrix().print(15, 5);
+//			Utils.pl("pose ==> rotX: " + pose.getRotX() + "  rotY: " + pose.getRotY() + "  rotZ: " + pose.getRotZ());
+
+			// map data
+			for (Matrix point : this.mock.getWorldCoordinates()) {
+				po.points.add(new Point3D(point.get(0, 0), point.get(1, 0), point.get(2, 0)));
+			}
+
+			if (frameNum % 10 == 0) {
+				synchronized (this.keyframes) {
+					this.keyframes.add(pose);
+				}
+			}
+			po.cameras = this.keyframes;
+//			po.cameras = new ArrayList<Pose>();
+//			Pose dummyPose = new Pose();
+//
+//			dummyPose.setQw(this.orientation.get(0, 0));
+//			dummyPose.setQx(this.orientation.get(1, 0));
+//			dummyPose.setQy(this.orientation.get(2, 0));
+//			dummyPose.setQz(this.orientation.get(3, 0));
+//
+//			dummyPose.setCz(-2);
+//
+//			Matrix rotChange = new Matrix(4, 1);
+//			rotChange.set(0, 0, 1);
+//			rotChange.set(2, 0, 0.1);
+//			rotChange = rotChange.times(1 / rotChange.normF());
+//			this.orientation = Utils.quatMult(rotChange, this.orientation);
+//
+//			po.cameras.add(dummyPose);
 
 			try {
-				Thread.sleep(32);
+				Thread.sleep(10);
 			} catch (Exception e) {
 			}
 

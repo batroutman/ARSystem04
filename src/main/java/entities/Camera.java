@@ -90,9 +90,9 @@ public class Camera {
 		mat.set(2, 1, r21);
 		mat.set(2, 2, r22);
 
-		mat.set(0, 3, -tx);
-		mat.set(1, 3, -ty);
-		mat.set(2, 3, -tz);
+		mat.set(0, 3, tx);
+		mat.set(1, 3, ty);
+		mat.set(2, 3, tz);
 
 //		Matrix4f viewMatrix = Utils.MatrixToMatrix4f(mat);
 		Matrix4f viewMatrix = Utils.MatrixToMatrix4f(Rx.times(mat));

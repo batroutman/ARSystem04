@@ -114,7 +114,7 @@ public class OpenGLARDisplay {
 		TexturedModel tStaticModel = new TexturedModel(tModel,
 				new ModelTexture(this.loader.loadTexture("solid_colors_64")));
 //		Entity tEntity = new Entity(tStaticModel, new Vector3f(0.109906f, -0.122303f, 1.1223031f), 0, 0, 0, 0.05f);
-		Entity tEntity = new Entity(tStaticModel, new Vector3f(0, 0, 20f), 0, 0, 0, 2f);
+		Entity tEntity = new Entity(tStaticModel, new Vector3f(0, 0, 1.5f), 0, 0, 0, 0.5f);
 		this.entities.add(tEntity);
 
 		Random rand = new Random(100);
@@ -164,23 +164,23 @@ public class OpenGLARDisplay {
 
 		context.updateGlfwWindow();
 		this.renderer.prepare();
-		if (this.gui.getView() == GUIComponents.AR_VIEW) {
+		if (this.gui.getView() == GUIComponents.VIEW.AR) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 
-		} else if (this.gui.getView() == GUIComponents.PROCESSED_VIEW) {
+		} else if (this.gui.getView() == GUIComponents.VIEW.PROCESSED) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
 					this.features);
 
-		} else if (this.gui.getView() == GUIComponents.MAP_VIEW) {
+		} else if (this.gui.getView() == GUIComponents.VIEW.MAP) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, this.pose, 3);
 
-		} else if (this.gui.getView() == GUIComponents.ALL_VIEW) {
+		} else if (this.gui.getView() == GUIComponents.VIEW.ALL) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
@@ -228,7 +228,7 @@ public class OpenGLARDisplay {
 	public void setCameraPose(double r00, double r01, double r02, double r10, double r11, double r12, double r20,
 			double r21, double r22, double tx, double ty, double tz) {
 		this.camera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz);
-		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz + 2);
+		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty + 0.5, tz + 2);
 	}
 
 	public void detectChanges() {

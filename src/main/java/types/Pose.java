@@ -202,15 +202,15 @@ public class Pose {
 	}
 
 	public double getRotX() {
-		return Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
+		return -Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
 	}
 
 	public double getRotY() {
-		return Math.asin(2 * (qw * qy - qz * qx));
+		return -Math.asin(2 * (qw * qy - qz * qx));
 	}
 
 	public double getRotZ() {
-		return Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+		return -Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
 	}
 
 	public double getRotXDeg() {

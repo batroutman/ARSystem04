@@ -18,7 +18,6 @@ import runtimevars.CameraIntrinsics;
 import runtimevars.Parameters;
 import shaders.StaticShader;
 import toolbox.Maths;
-import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.Feature;
 import types.Point3D;
@@ -180,11 +179,12 @@ public class Renderer {
 	}
 
 	public void renderCameras(Camera mapCamera, StaticShader cameraShader, List<Pose> poses, float lineWidth) {
-		for (Pose pose : poses) {
-			Utils.pl("yeet");
-			this.renderCamera(mapCamera, cameraShader, (float) pose.getRotXDeg(), (float) pose.getRotYDeg(),
-					(float) pose.getRotZDeg(), (float) pose.getCx(), (float) pose.getCy(), (float) pose.getCz(),
-					lineWidth, 1, 0, 0);
+		synchronized (poses) {
+			for (Pose pose : poses) {
+				this.renderCamera(mapCamera, cameraShader, (float) pose.getRotXDeg(), (float) pose.getRotYDeg(),
+						(float) pose.getRotZDeg(), (float) pose.getCx(), (float) pose.getCy(), (float) pose.getCz(),
+						lineWidth, 1, 0, 0);
+			}
 		}
 	}
 
@@ -202,7 +202,7 @@ public class Renderer {
 		cameraShader.start();
 		cameraShader.loadViewMatrix(mapCamera);
 		cameraShader.loadCustomColor(new Vector3f(R, G, B));
-		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(Cx, Cy, Cz), rx, ry, rz, 0.001f);
+		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(Cx, Cy, Cz), rx, ry, rz, 0.0002f);
 		cameraShader.loadTransformationMatrix(transformationMatrix);
 
 		GL11.glBegin(GL11.GL_LINES);

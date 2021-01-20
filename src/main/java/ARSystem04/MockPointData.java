@@ -14,7 +14,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 100;
+	protected long MAX_FRAMES = 400;
 	protected int NUM_POINTS = 500;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
@@ -22,8 +22,8 @@ public class MockPointData {
 
 	// Starting pose parameters
 	// NOTE: translations should be negative (-C)
-	protected Vector3f initialTranslation = new Vector3f(0f, 12f, 0f);
-	protected double initialRotX = 0.5;
+	protected Vector3f initialTranslation = new Vector3f(0f, 0f, -2f);
+	protected double initialRotX = 0.0;
 	protected double initialRotY = 0.0;
 	protected double initialRotZ = 0.0;
 
@@ -31,13 +31,14 @@ public class MockPointData {
 	// NOTE: translations should be negative (-C)
 	// protected Vector3f translationVelocity = new Vector3f(0.00f, 0.002f,
 	// -0.2f);
-	protected Vector3f translationVelocity = new Vector3f(0.7f, 0.0f, 0.0f);
+//	protected Vector3f translationVelocity = new Vector3f(0.7f, 0.0f, 0.0f);
+//	protected double rotX = 0.000;
+//	protected double rotY = -0.02;
+//	protected double rotZ = -0.000;
+	protected Vector3f translationVelocity = new Vector3f(-0.02f, 0.00f, 0.00f);
 	protected double rotX = 0.000;
-	protected double rotY = -0.02;
-	protected double rotZ = -0.000;
-	// protected double rotX = 0.5;
-	// protected double rotY = 0.2;
-	// protected double rotZ = 1.4;
+	protected double rotY = 0.005;
+	protected double rotZ = 0.000;
 
 	// List of homogeneous column vectors (4x1) corresponding to world
 	// coordinates
@@ -69,12 +70,19 @@ public class MockPointData {
 
 	protected void initWorldCoordinates() {
 		String output = "";
-		double Z_SPAWN_MIN = -100;
-		double Z_SPAWN_MAX = 100;
-		double Y_SPAWN_MIN = -20;
-		double Y_SPAWN_MAX = 20;
-		double X_SPAWN_MIN = -30;
-		double X_SPAWN_MAX = 30;
+//		double Z_SPAWN_MIN = -100;
+//		double Z_SPAWN_MAX = 100;
+//		double Y_SPAWN_MIN = -20;
+//		double Y_SPAWN_MAX = 20;
+//		double X_SPAWN_MIN = -30;
+//		double X_SPAWN_MAX = 30;
+
+		double Z_SPAWN_MIN = 1;
+		double Z_SPAWN_MAX = 2;
+		double Y_SPAWN_MIN = -1;
+		double Y_SPAWN_MAX = 1;
+		double X_SPAWN_MIN = -1;
+		double X_SPAWN_MAX = 1;
 
 		double Z_RANGE = Z_SPAWN_MAX - Z_SPAWN_MIN;
 		double Y_RANGE = Y_SPAWN_MAX - Y_SPAWN_MIN;
@@ -99,9 +107,9 @@ public class MockPointData {
 	public Matrix getR(long frameNumber) {
 
 		// Calculate this frame's rotation parameters
-		float gamma = (float) (this.initialRotX + this.rotX * (frameNumber + this.START_FRAME));
-		float beta = (float) (this.initialRotY + this.rotY * (frameNumber + this.START_FRAME));
-		float alpha = (float) (this.initialRotZ + this.rotZ * (frameNumber + this.START_FRAME));
+		float gamma = (float) -(this.initialRotX + this.rotX * (frameNumber + this.START_FRAME));
+		float beta = (float) -(this.initialRotY + this.rotY * (frameNumber + this.START_FRAME));
+		float alpha = (float) -(this.initialRotZ + this.rotZ * (frameNumber + this.START_FRAME));
 
 		Matrix Rx = Matrix.identity(4, 4);
 		Rx.set(1, 1, Math.cos(gamma));
@@ -124,14 +132,15 @@ public class MockPointData {
 		return Rz.times(Ry).times(Rx);
 	}
 
-	// Returns homogeneous 4x4 matrix of WORLD translation parameters
+	// Returns homogeneous 4x4 matrix of WORLD translation parameters (this uses
+	// negative C)
 	public Matrix getIC(long frameNumber) {
 		// Calculate C
 		Matrix C = Matrix.identity(4, 4);
 
-		C.set(0, 3, this.initialTranslation.x + this.translationVelocity.x * (frameNumber + this.START_FRAME));
-		C.set(1, 3, this.initialTranslation.y + this.translationVelocity.y * (frameNumber + this.START_FRAME));
-		C.set(2, 3, this.initialTranslation.z + this.translationVelocity.z * (frameNumber + this.START_FRAME));
+		C.set(0, 3, -(this.initialTranslation.x + this.translationVelocity.x * (frameNumber + this.START_FRAME)));
+		C.set(1, 3, -(this.initialTranslation.y + this.translationVelocity.y * (frameNumber + this.START_FRAME)));
+		C.set(2, 3, -(this.initialTranslation.z + this.translationVelocity.z * (frameNumber + this.START_FRAME)));
 
 		return C;
 	}
@@ -139,9 +148,9 @@ public class MockPointData {
 	public Matrix getQuaternion(long frameNumber) {
 
 		// Calculate this frame's rotation parameters
-		float gamma = (float) (this.initialRotX + this.rotX * (frameNumber + this.START_FRAME));
-		float beta = (float) (this.initialRotY + this.rotY * (frameNumber + this.START_FRAME));
-		float alpha = (float) (this.initialRotZ + this.rotZ * (frameNumber + this.START_FRAME));
+		float gamma = (float) -(this.initialRotX + this.rotX * (frameNumber + this.START_FRAME));
+		float beta = (float) -(this.initialRotY + this.rotY * (frameNumber + this.START_FRAME));
+		float alpha = (float) -(this.initialRotZ + this.rotZ * (frameNumber + this.START_FRAME));
 
 		double cx = Math.cos(gamma * 0.5);
 		double cy = Math.cos(beta * 0.5);

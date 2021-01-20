@@ -32,6 +32,7 @@ import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.system.CallbackI.V;
 
 import runtimevars.Parameters;
 
@@ -43,11 +44,11 @@ public class GUIComponents {
 	private volatile boolean running = false;
 	private volatile boolean hiding = false;
 
-	public static final int AR_VIEW = 0;
-	public static final int PROCESSED_VIEW = 1;
-	public static final int MAP_VIEW = 2;
-	public static final int ALL_VIEW = 3;
-	int view = ALL_VIEW;
+	public static enum VIEW {
+		AR, PROCESSED, MAP, ALL
+	};
+
+	VIEW view = VIEW.MAP;
 
 	private Widget mainWidget = new Widget(20, 20, 200, 400);
 	private Label viewLabel = new Label(10, 10, 100, 10);
@@ -109,10 +110,10 @@ public class GUIComponents {
 		this.mapViewButton.setRadioButtonGroup(this.viewButtonGroup);
 		this.allViewButton.setRadioButtonGroup(this.viewButtonGroup);
 
-		this.arViewButton.setChecked(this.view == AR_VIEW);
-		this.processedViewButton.setChecked(this.view == PROCESSED_VIEW);
-		this.mapViewButton.setChecked(this.view == MAP_VIEW);
-		this.allViewButton.setChecked(this.view == ALL_VIEW);
+		this.arViewButton.setChecked(this.view == VIEW.AR);
+		this.processedViewButton.setChecked(this.view == VIEW.PROCESSED);
+		this.mapViewButton.setChecked(this.view == VIEW.MAP);
+		this.allViewButton.setChecked(this.view == VIEW.ALL);
 
 		// handlers for radio buttons
 		this.arViewButton.getListenerMap().addListener(MouseClickEvent.class, (MouseClickEventListener) event -> {
@@ -204,15 +205,15 @@ public class GUIComponents {
 	public void updateView() {
 		RadioButton selection = this.viewButtonGroup.getSelection();
 		if (selection == this.arViewButton) {
-			this.view = AR_VIEW;
+			this.view = VIEW.AR;
 		} else if (selection == this.processedViewButton) {
-			this.view = PROCESSED_VIEW;
+			this.view = VIEW.PROCESSED;
 		}
 		if (selection == this.mapViewButton) {
-			this.view = MAP_VIEW;
+			this.view = VIEW.MAP;
 		}
 		if (selection == this.allViewButton) {
-			this.view = ALL_VIEW;
+			this.view = VIEW.ALL;
 		}
 	}
 
@@ -280,7 +281,7 @@ public class GUIComponents {
 		this.fpsLabel = fpsLabel;
 	}
 
-	public int getView() {
+	public VIEW getView() {
 		return this.view;
 	}
 
