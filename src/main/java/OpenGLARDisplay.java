@@ -174,7 +174,7 @@ public class OpenGLARDisplay {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
-					this.features);
+					this.features, this.gui.getFeatureDisplayType());
 
 		} else if (this.gui.getView() == GUIComponents.VIEW.MAP) {
 
@@ -187,7 +187,7 @@ public class OpenGLARDisplay {
 			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
 			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
 			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
-					this.features);
+					this.features, this.gui.getFeatureDisplayType());
 			GL11.glViewport(Parameters.screenWidth / 2, Parameters.screenHeight / 2, Parameters.screenWidth / 2,
 					Parameters.screenHeight / 2);
 			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, this.pose, 2);

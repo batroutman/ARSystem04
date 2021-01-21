@@ -13,6 +13,7 @@ import org.opencv.core.KeyPoint;
 
 import entities.Camera;
 import entities.Entity;
+import gui.GUIComponents;
 import models.RawModel;
 import models.TexturedModel;
 import runtimevars.CameraIntrinsics;
@@ -90,7 +91,7 @@ public class Renderer {
 	}
 
 	public void renderProcessedView(Entity background, StaticShader bgShader, List<Correspondence2D2D> correspondences,
-			List<KeyPoint> features) {
+			List<KeyPoint> features, GUIComponents.FEATURE_DISPLAY displayType) {
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthFunc(GL11.GL_NEVER);
@@ -107,7 +108,12 @@ public class Renderer {
 		GL20.glDisableVertexAttribArray(1);
 		GL30.glBindVertexArray(0);
 		bgShader.stop();
-		this.renderFeatures(features);
+		if (displayType == GUIComponents.FEATURE_DISPLAY.BOXES) {
+			this.renderFeatureBoxes(features);
+		} else {
+			this.renderFeaturePoints(features);
+		}
+
 		this.renderCorrespondences(correspondences);
 
 	}
@@ -126,7 +132,20 @@ public class Renderer {
 		}
 	}
 
-	public void renderFeatures(List<KeyPoint> features) {
+	public void renderFeaturePoints(List<KeyPoint> features) {
+		GL11.glColor3f(0, 0, 1);
+		GL11.glPointSize(5.0f);
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadIdentity();
+		GL11.glOrtho(0, Parameters.width, Parameters.height, 0, 0, 100);
+		GL11.glBegin(GL11.GL_POINTS);
+		for (KeyPoint feature : features) {
+			GL11.glVertex2d(feature.pt.x, feature.pt.y);
+		}
+		GL11.glEnd();
+	}
+
+	public void renderFeatureBoxes(List<KeyPoint> features) {
 		GL11.glColor3f(0, 0, 1);
 		GL11.glLineWidth(2.0f);
 		GL11.glMatrixMode(GL11.GL_PROJECTION);

@@ -47,7 +47,13 @@ public class GUIComponents {
 		AR, PROCESSED, MAP, ALL
 	};
 
-	VIEW view = VIEW.ALL;
+	VIEW view = VIEW.PROCESSED;
+
+	public static enum FEATURE_DISPLAY {
+		BOXES, POINTS
+	};
+
+	FEATURE_DISPLAY featureDisplayType = FEATURE_DISPLAY.BOXES;
 
 	private Widget mainWidget = new Widget(20, 20, 200, 400);
 	private Label viewLabel = new Label(10, 10, 100, 10);
@@ -56,12 +62,16 @@ public class GUIComponents {
 	private RadioButton processedViewButton = new RadioButton(10, 10, 100, 10);
 	private RadioButton mapViewButton = new RadioButton(10, 10, 100, 10);
 	private RadioButton allViewButton = new RadioButton(10, 10, 100, 10);
+	private Label featureDisplayLabel = new Label(10, 10, 100, 10);
+	private RadioButtonGroup featureDisplayButtonGroup = new RadioButtonGroup();
+	private RadioButton boxesButton = new RadioButton(10, 10, 100, 10);
+	private RadioButton pointsButton = new RadioButton(10, 10, 100, 10);
 	private Label frameNumLabel = new Label(10, 10, 100, 10);
 	private Label fpsLabel = new Label(10, 10, 100, 10);
 	private Label numFeaturesLabel = new Label(10, 10, 100, 10);
 
-	Component[] order = { viewLabel, arViewButton, processedViewButton, mapViewButton, allViewButton, frameNumLabel,
-			fpsLabel, numFeaturesLabel };
+	Component[] order = { viewLabel, arViewButton, processedViewButton, mapViewButton, allViewButton,
+			featureDisplayLabel, boxesButton, pointsButton, frameNumLabel, fpsLabel, numFeaturesLabel };
 
 	public GUIComponents() {
 
@@ -102,6 +112,9 @@ public class GUIComponents {
 		this.processedViewButton.getTextState().setText("Processed View");
 		this.mapViewButton.getTextState().setText("Map View");
 		this.allViewButton.getTextState().setText("All Views");
+		this.featureDisplayLabel.getTextState().setText("Feature Display Type: ");
+		this.boxesButton.getTextState().setText("Feature Boxes");
+		this.pointsButton.getTextState().setText("Feature Points");
 		this.frameNumLabel.getTextState().setText("Frame #: --");
 		this.fpsLabel.getTextState().setText("Framerate: --");
 		this.numFeaturesLabel.getTextState().setText("Number of Features: --");
@@ -115,6 +128,12 @@ public class GUIComponents {
 		this.processedViewButton.setChecked(this.view == VIEW.PROCESSED);
 		this.mapViewButton.setChecked(this.view == VIEW.MAP);
 		this.allViewButton.setChecked(this.view == VIEW.ALL);
+
+		this.boxesButton.setRadioButtonGroup(this.featureDisplayButtonGroup);
+		this.pointsButton.setRadioButtonGroup(this.featureDisplayButtonGroup);
+
+		this.boxesButton.setChecked(this.featureDisplayType == FEATURE_DISPLAY.BOXES);
+		this.pointsButton.setChecked(this.featureDisplayType == FEATURE_DISPLAY.POINTS);
 
 		// handlers for radio buttons
 		this.arViewButton.getListenerMap().addListener(MouseClickEvent.class, (MouseClickEventListener) event -> {
@@ -131,6 +150,14 @@ public class GUIComponents {
 			this.updateView();
 		});
 
+		this.boxesButton.getListenerMap().addListener(MouseClickEvent.class, (MouseClickEventListener) event -> {
+			this.updateFeatureDisplay();
+		});
+
+		this.pointsButton.getListenerMap().addListener(MouseClickEvent.class, (MouseClickEventListener) event -> {
+			this.updateFeatureDisplay();
+		});
+
 		// Set background color for frame
 		frame.getContainer().getStyle().getBackground().setColor(ColorConstants.transparent());
 		frame.getContainer().setFocusable(false);
@@ -144,6 +171,9 @@ public class GUIComponents {
 		this.mainWidget.getContainer().add(this.processedViewButton);
 		this.mainWidget.getContainer().add(this.mapViewButton);
 		this.mainWidget.getContainer().add(this.allViewButton);
+		this.mainWidget.getContainer().add(this.featureDisplayLabel);
+		this.mainWidget.getContainer().add(this.boxesButton);
+		this.mainWidget.getContainer().add(this.pointsButton);
 		this.mainWidget.getContainer().add(this.fpsLabel);
 		this.mainWidget.getContainer().add(this.frameNumLabel);
 		this.mainWidget.getContainer().add(this.numFeaturesLabel);
@@ -210,12 +240,19 @@ public class GUIComponents {
 			this.view = VIEW.AR;
 		} else if (selection == this.processedViewButton) {
 			this.view = VIEW.PROCESSED;
-		}
-		if (selection == this.mapViewButton) {
+		} else if (selection == this.mapViewButton) {
 			this.view = VIEW.MAP;
-		}
-		if (selection == this.allViewButton) {
+		} else if (selection == this.allViewButton) {
 			this.view = VIEW.ALL;
+		}
+	}
+
+	public void updateFeatureDisplay() {
+		RadioButton selection = this.featureDisplayButtonGroup.getSelection();
+		if (selection == this.boxesButton) {
+			this.featureDisplayType = FEATURE_DISPLAY.BOXES;
+		} else if (selection == this.pointsButton) {
+			this.featureDisplayType = FEATURE_DISPLAY.POINTS;
 		}
 	}
 
@@ -289,6 +326,10 @@ public class GUIComponents {
 
 	public VIEW getView() {
 		return this.view;
+	}
+
+	public FEATURE_DISPLAY getFeatureDisplayType() {
+		return featureDisplayType;
 	}
 
 }

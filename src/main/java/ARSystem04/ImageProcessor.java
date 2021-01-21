@@ -8,8 +8,11 @@ import org.opencv.core.Size;
 import org.opencv.features2d.FastFeatureDetector;
 import org.opencv.imgproc.Imgproc;
 
+import types.ImageData;
+
 public class ImageProcessor {
 
+	public static int[] FASTThresholds = { 50, 50, 50, 50 };
 	public Mat logitLookUp = new Mat(1, 256, CvType.CV_8U);
 	public FastFeatureDetector FAST = FastFeatureDetector.create(35, true, FastFeatureDetector.TYPE_9_16);
 
@@ -46,10 +49,24 @@ public class ImageProcessor {
 		return dest;
 	}
 
+	public Mat autoContrast(Mat src) {
+		Mat dest = new Mat();
+		Imgproc.equalizeHist(src, dest);
+		return dest;
+	}
+
 	public MatOfKeyPoint getFastFeatures(Mat img) {
 		MatOfKeyPoint keypoints = new MatOfKeyPoint();
 		this.FAST.detect(img, keypoints);
 		return keypoints;
+	}
+
+	public void getFastFeatures(ImageData pyramid) {
+		for (int i = 0; i < pyramid.getNumOctaves(); i++) {
+			this.FAST.setThreshold(FASTThresholds[i]);
+			MatOfKeyPoint keypoints = this.getFastFeatures(pyramid.getOctaves().get(i));
+			pyramid.getKeypoints().set(i, keypoints);
+		}
 	}
 
 	public Mat downScale(Mat src) {
@@ -62,6 +79,23 @@ public class ImageProcessor {
 		Mat dest = new Mat();
 		Imgproc.pyrUp(src, dest, new Size((int) (src.cols() * 2), (int) (src.rows() * 2)));
 		return dest;
+	}
+
+	public ImageData generatePyramid(Mat image) {
+		return this.generatePyramid(image, 3);
+	}
+
+	public ImageData generatePyramid(Mat image, int numOctaves) {
+		ImageData pyramid = new ImageData(numOctaves);
+
+		// load octaves with downscaled images
+		pyramid.getOctaves().set(0, image);
+		for (int i = 1; i < pyramid.getNumOctaves(); i++) {
+			pyramid.getOctaves().set(i, this.downScale(pyramid.getOctaves().get(i - 1)));
+		}
+
+		return pyramid;
+
 	}
 
 }

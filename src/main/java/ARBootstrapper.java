@@ -1,14 +1,13 @@
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.highgui.HighGui;
+import java.util.ArrayList;
+import java.util.List;
 
-import ARSystem04.ImageProcessor;
+import org.opencv.core.Core;
+
 import ARSystem04.PoseEstimator;
 import ARSystem04.TestPipeline;
 import buffers.Buffer;
 import buffers.SingletonBuffer;
 import buffers.TUMBuffer;
-import types.FramePack;
 import types.PipelineOutput;
 
 public class ARBootstrapper {
@@ -46,19 +45,10 @@ public class ARBootstrapper {
 	}
 
 	public void tests() {
-		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
-		ImageProcessor imgProc = new ImageProcessor();
-		FramePack fp = tumBuffer.getNext();
-		Mat frame = fp.getRawFrame();
-		frame = imgProc.downScale(frame);
-		frame = imgProc.downScale(frame);
-		frame = imgProc.downScale(frame);
+		List<Double> list = new ArrayList<Double>(4);
+		list.set(0, 7.0);
 
-		frame = imgProc.upScale(frame);
-		frame = imgProc.upScale(frame);
-		frame = imgProc.upScale(frame);
-		HighGui.imshow("test", frame);
-		char c = (char) HighGui.waitKey(0);
+		pl(list.get(0));
 
 	}
 
