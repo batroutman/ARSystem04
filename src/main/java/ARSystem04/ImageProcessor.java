@@ -6,8 +6,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Size;
 import org.opencv.features2d.FastFeatureDetector;
+import org.opencv.features2d.ORB;
 import org.opencv.imgproc.Imgproc;
 
+import toolbox.Utils;
 import types.ImageData;
 
 public class ImageProcessor {
@@ -15,6 +17,7 @@ public class ImageProcessor {
 	public static int[] FASTThresholds = { 50, 50, 50, 50 };
 	public Mat logitLookUp = new Mat(1, 256, CvType.CV_8U);
 	public FastFeatureDetector FAST = FastFeatureDetector.create(35, true, FastFeatureDetector.TYPE_9_16);
+	public ORB orb = ORB.create();
 
 	public int featureNumTarget = 100;
 
@@ -24,6 +27,9 @@ public class ImageProcessor {
 
 	public void init() {
 		this.loadLogitLookUp();
+		Utils.pl("ORB patch size: " + this.orb.getPatchSize());
+		this.orb.setPatchSize(80);
+		Utils.pl("ORB patch size reset to: " + this.orb.getPatchSize());
 	}
 
 	public void loadLogitLookUp() {
@@ -96,6 +102,21 @@ public class ImageProcessor {
 
 		return pyramid;
 
+	}
+
+	public Mat getORBDescriptors(Mat src, MatOfKeyPoint keypoints) {
+		Mat descriptors = new Mat();
+		this.orb.compute(src, keypoints, descriptors);
+		return descriptors;
+	}
+
+	public void getORBDescriptors(ImageData pyramid) {
+		for (int i = 0; i < pyramid.getNumOctaves(); i++) {
+			this.orb.setPatchSize((int) (7 * Math.pow(2, i)));
+			Utils.pl("set orb patch size to: " + this.orb.getPatchSize());
+			pyramid.getDescriptors().set(i,
+					this.getORBDescriptors(pyramid.getOctaves().get(i), pyramid.getKeypoints().get(i)));
+		}
 	}
 
 }

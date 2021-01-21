@@ -1,11 +1,15 @@
 package ARSystem04;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.opencv.core.Mat;
 
 import buffers.Buffer;
 import buffers.QueuedBuffer;
 import buffers.SingletonBuffer;
 import toolbox.Utils;
+import types.Correspondence2D2D;
 import types.FramePack;
 import types.ImageData;
 import types.PipelineOutput;
@@ -15,6 +19,9 @@ public class TestPipeline extends PoseEstimator {
 	protected long frameNum = 0;
 
 	protected ImageProcessor imgProc = new ImageProcessor();
+	protected ORBMatcher orbMatcher = new ORBMatcher();
+
+	ImageData firstFrame;
 
 	Thread poseEstimationThread = new Thread() {
 		@Override
@@ -61,10 +68,21 @@ public class TestPipeline extends PoseEstimator {
 				continue;
 			}
 
-			// transform image
+			// transform image and feature matching
 			Mat processedImage = imgProc.autoContrast(currentFrame.getProcessedFrame());
 			ImageData pyramid = imgProc.generatePyramid(processedImage);
 			imgProc.getFastFeatures(pyramid);
+			pyramid.generateNormalizedKeypoints();
+			imgProc.getORBDescriptors(pyramid);
+			pyramid.mergeDescriptors();
+			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+			if (frameNum == 0) {
+				this.firstFrame = pyramid;
+			} else if (frameNum == 59) {
+				correspondences = orbMatcher.matchDescriptors2(firstFrame.getNormalizedKeypoints(),
+						firstFrame.getMergedDescriptors(), pyramid.getNormalizedKeypoints(),
+						pyramid.getMergedDescriptors());
+			}
 
 			// set output
 			PipelineOutput out = new PipelineOutput();
@@ -80,8 +98,9 @@ public class TestPipeline extends PoseEstimator {
 			byte[] processedBuffer = new byte[processedImage.rows() * processedImage.cols()];
 			processedImage.get(0, 0, processedBuffer);
 			out.processedFrameBuffer = processedBuffer;
-			out.features = pyramid.generateNormalizedKeypoints();
+			out.features = pyramid.getNormalizedKeypoints();
 			out.numFeatures = out.features.size();
+			out.correspondences = correspondences;
 
 			this.outputBuffer.push(out);
 			this.frameNum++;

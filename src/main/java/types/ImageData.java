@@ -3,6 +3,7 @@ package types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
@@ -12,7 +13,10 @@ public class ImageData {
 	protected int numOctaves = 4;
 	protected List<Mat> octaves = new ArrayList<Mat>(this.numOctaves);
 	protected List<MatOfKeyPoint> keypoints = new ArrayList<MatOfKeyPoint>(this.numOctaves);
+	protected List<Mat> descriptors = new ArrayList<Mat>();
 	protected List<KeyPoint> normalizedKeypoints = new ArrayList<KeyPoint>();
+	protected List<Mat> descriptorRows = new ArrayList<Mat>();
+	protected Mat mergedDescriptors = null;
 
 	public ImageData() {
 		this.preloadLists();
@@ -29,12 +33,13 @@ public class ImageData {
 		for (int i = 0; i < this.numOctaves; i++) {
 			this.octaves.add(null);
 			this.keypoints.add(null);
+			this.descriptors.add(null);
 		}
 	}
 
 	public List<KeyPoint> generateNormalizedKeypoints() {
 
-		this.normalizedKeypoints = new ArrayList<KeyPoint>();
+		this.normalizedKeypoints.clear();
 
 		for (int i = 0; i < this.keypoints.size(); i++) {
 			List<KeyPoint> listKeypoints = this.keypoints.get(i).toList();
@@ -54,6 +59,27 @@ public class ImageData {
 
 		return this.normalizedKeypoints;
 
+	}
+
+	// loop through descriptors for each octave and place them in single flat list
+	public List<Mat> generateDescriptorRows() {
+
+		this.descriptorRows.clear();
+
+		for (int i = 0; i < this.descriptors.size(); i++) {
+			for (int j = 0; j < this.descriptors.get(i).rows(); j++) {
+				this.descriptorRows.add(this.descriptors.get(i).row(j));
+			}
+		}
+
+		return this.descriptorRows;
+	}
+
+	public Mat mergeDescriptors() {
+		Mat merged = new Mat();
+		Core.vconcat(this.descriptors, merged);
+		this.mergedDescriptors = merged;
+		return merged;
 	}
 
 	public int getNumOctaves() {
@@ -86,6 +112,30 @@ public class ImageData {
 
 	public void setNormalizedKeypoints(List<KeyPoint> normalizedKeypoints) {
 		this.normalizedKeypoints = normalizedKeypoints;
+	}
+
+	public List<Mat> getDescriptors() {
+		return descriptors;
+	}
+
+	public void setDescriptors(List<Mat> descriptors) {
+		this.descriptors = descriptors;
+	}
+
+	public List<Mat> getDescriptorRows() {
+		return descriptorRows;
+	}
+
+	public void setDescriptorRows(List<Mat> descriptorRows) {
+		this.descriptorRows = descriptorRows;
+	}
+
+	public Mat getMergedDescriptors() {
+		return mergedDescriptors;
+	}
+
+	public void setMergedDescriptors(Mat mergedDescriptors) {
+		this.mergedDescriptors = mergedDescriptors;
 	}
 
 }
