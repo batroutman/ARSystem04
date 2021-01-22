@@ -125,10 +125,10 @@ public class ORBMatcher {
 		List<DMatch> listMatches = matches.toList();
 		for (int i = 0; i < listMatches.size(); i++) {
 			DMatch dmatch = listMatches.get(i);
-			Utils.pl("first match ==> distance: " + listMatches.get(i).distance + ", imgIdx: "
-					+ listMatches.get(i).imgIdx + ", queryIdx: " + listMatches.get(i).queryIdx + ", trainIdx: "
-					+ listMatches.get(i).trainIdx);
-			if (dmatch.distance < 10) {
+//			Utils.pl("first match ==> distance: " + listMatches.get(i).distance + ", imgIdx: "
+//					+ listMatches.get(i).imgIdx + ", queryIdx: " + listMatches.get(i).queryIdx + ", trainIdx: "
+//					+ listMatches.get(i).trainIdx);
+			if (dmatch.distance < 40) {
 				Correspondence2D2D c = new Correspondence2D2D();
 				c.setX0(referenceKeypoints.get(dmatch.trainIdx).pt.x);
 				c.setY0(referenceKeypoints.get(dmatch.trainIdx).pt.y);
