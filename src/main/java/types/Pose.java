@@ -16,10 +16,6 @@ public class Pose {
 	double Cy;
 	double Cz;
 
-	public double rx = 0;
-	public double ry = 0;
-	public double rz = 0;
-
 	boolean fixed = false;
 
 	public Pose() {

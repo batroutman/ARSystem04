@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.features2d.ORB;
 
 import buffers.Buffer;
 import buffers.QueuedBuffer;
@@ -20,9 +19,8 @@ public class TestPipeline extends PoseEstimator {
 
 	protected long frameNum = 0;
 
-	protected ImageProcessor imgProc = new ImageProcessor();
 	protected ORBMatcher orbMatcher = new ORBMatcher();
-	ORB orb = ORB.create();
+	protected Map map = new Map();
 
 	ImageData firstFrame;
 	MatOfKeyPoint firstKeypoints;
@@ -57,16 +55,7 @@ public class TestPipeline extends PoseEstimator {
 
 	protected void init() {
 		Utils.pl("Initializing TestPipeline...");
-		this.orb.setScoreType(ORB.FAST_SCORE);
-		this.orb.setScaleFactor(2);
-		Utils.pl("ORB num features: " + this.orb.getMaxFeatures());
-		Utils.pl("ORB num levels: " + this.orb.getNLevels());
-		Utils.pl("ORB FAST threshold: " + this.orb.getFastThreshold());
-		Utils.pl("ORB patch size: " + this.orb.getPatchSize());
-		Utils.pl("ORB scale factor: " + this.orb.getScaleFactor());
-		Utils.pl("ORB score type: " + this.orb.getScoreType());
-		Utils.pl("ORB WTA_K: " + this.orb.getWTA_K());
-		Utils.pl("FAST: " + ORB.FAST_SCORE);
+
 	}
 
 	protected void mainloop() {
@@ -84,28 +73,17 @@ public class TestPipeline extends PoseEstimator {
 			}
 
 			// transform image and feature matching
-			Mat processedImage = imgProc.autoContrast(currentFrame.getProcessedFrame());
-//			ImageData pyramid = imgProc.generatePyramid(processedImage);
-//			imgProc.getFastFeatures(pyramid);
-//			pyramid.generateNormalizedKeypoints();
-//			imgProc.getORBDescriptors(pyramid);
-//			pyramid.mergeDescriptors();
-			MatOfKeyPoint keypoints = new MatOfKeyPoint();
-			Mat descriptors = new Mat();
+			ImageData processedImage = new ImageData(currentFrame.getProcessedFrame());
+			processedImage.autoContrast();
+			processedImage.detectAndComputeORB();
 
-			this.orb.detect(processedImage, keypoints);
-			this.orb.compute(processedImage, keypoints, descriptors);
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
-			if (frameNum == 0) {
-//				this.firstFrame = pyramid;
-				this.firstKeypoints = keypoints;
-				this.firstDescriptors = descriptors;
-			} else {
-//				correspondences = orbMatcher.matchDescriptors2(firstFrame.getNormalizedKeypoints(),
-//						firstFrame.getMergedDescriptors(), pyramid.getNormalizedKeypoints(),
-//						pyramid.getMergedDescriptors());
-				correspondences = orbMatcher.matchDescriptors2(this.firstKeypoints.toList(), this.firstDescriptors,
-						keypoints.toList(), descriptors);
+			if (!this.map.isInitialized()) {
+				correspondences = this.map.getInitializer().registerData(this.frameNum, processedImage);
+			}
+
+			if (correspondences == null) {
+				correspondences = new ArrayList<Correspondence2D2D>();
 			}
 
 			// set output
@@ -116,13 +94,13 @@ public class TestPipeline extends PoseEstimator {
 			out.rawFrameBuffer = currentFrame.getRawFrameBuffer();
 			out.frameNum = this.frameNum;
 			out.fps = fps;
-//			Utils.pl(fps + " fps");
+			Utils.pl(fps + " fps");
 
-			out.processedFrame = processedImage;
-			byte[] processedBuffer = new byte[processedImage.rows() * processedImage.cols()];
-			processedImage.get(0, 0, processedBuffer);
+			out.processedFrame = processedImage.getImage();
+			byte[] processedBuffer = new byte[processedImage.getImage().rows() * processedImage.getImage().cols()];
+			processedImage.getImage().get(0, 0, processedBuffer);
 			out.processedFrameBuffer = processedBuffer;
-			out.features = keypoints.toList();
+			out.features = processedImage.getKeypoints().toList();
 			out.numFeatures = out.features.size();
 			out.correspondences = correspondences;
 
@@ -130,7 +108,7 @@ public class TestPipeline extends PoseEstimator {
 			this.frameNum++;
 
 			try {
-				Thread.sleep(0);
+				Thread.sleep(5);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

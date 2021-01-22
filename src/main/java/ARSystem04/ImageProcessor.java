@@ -27,9 +27,17 @@ public class ImageProcessor {
 
 	public void init() {
 		this.loadLogitLookUp();
+		this.orb.setScoreType(ORB.FAST_SCORE);
+		this.orb.setScaleFactor(2);
+		this.orb.setNLevels(4);
+		Utils.pl("ORB num features: " + this.orb.getMaxFeatures());
+		Utils.pl("ORB num levels: " + this.orb.getNLevels());
+		Utils.pl("ORB FAST threshold: " + this.orb.getFastThreshold());
 		Utils.pl("ORB patch size: " + this.orb.getPatchSize());
-		this.orb.setPatchSize(80);
-		Utils.pl("ORB patch size reset to: " + this.orb.getPatchSize());
+		Utils.pl("ORB scale factor: " + this.orb.getScaleFactor());
+		Utils.pl("ORB score type: " + this.orb.getScoreType());
+		Utils.pl("ORB WTA_K: " + this.orb.getWTA_K());
+		Utils.pl("FAST: " + ORB.FAST_SCORE);
 	}
 
 	public void loadLogitLookUp() {
@@ -61,18 +69,14 @@ public class ImageProcessor {
 		return dest;
 	}
 
+	public void autoContrast(ImageData imageData) {
+		imageData.setImage(this.autoContrast(imageData.getImage()));
+	}
+
 	public MatOfKeyPoint getFastFeatures(Mat img) {
 		MatOfKeyPoint keypoints = new MatOfKeyPoint();
 		this.FAST.detect(img, keypoints);
 		return keypoints;
-	}
-
-	public void getFastFeatures(ImageData pyramid) {
-		for (int i = 0; i < pyramid.getNumOctaves(); i++) {
-			this.FAST.setThreshold(FASTThresholds[i]);
-			MatOfKeyPoint keypoints = this.getFastFeatures(pyramid.getOctaves().get(i));
-			pyramid.getKeypoints().set(i, keypoints);
-		}
 	}
 
 	public Mat downScale(Mat src) {
@@ -87,36 +91,15 @@ public class ImageProcessor {
 		return dest;
 	}
 
-	public ImageData generatePyramid(Mat image) {
-		return this.generatePyramid(image, 3);
-	}
-
-	public ImageData generatePyramid(Mat image, int numOctaves) {
-		ImageData pyramid = new ImageData(numOctaves);
-
-		// load octaves with downscaled images
-		pyramid.getOctaves().set(0, image);
-		for (int i = 1; i < pyramid.getNumOctaves(); i++) {
-			pyramid.getOctaves().set(i, this.downScale(pyramid.getOctaves().get(i - 1)));
-		}
-
-		return pyramid;
-
-	}
-
 	public Mat getORBDescriptors(Mat src, MatOfKeyPoint keypoints) {
 		Mat descriptors = new Mat();
 		this.orb.compute(src, keypoints, descriptors);
 		return descriptors;
 	}
 
-	public void getORBDescriptors(ImageData pyramid) {
-		for (int i = 0; i < pyramid.getNumOctaves(); i++) {
-			this.orb.setPatchSize((int) (7 * Math.pow(2, i)));
-			Utils.pl("set orb patch size to: " + this.orb.getPatchSize());
-			pyramid.getDescriptors().set(i,
-					this.getORBDescriptors(pyramid.getOctaves().get(i), pyramid.getKeypoints().get(i)));
-		}
+	public void detectAndComputeORB(ImageData imageData) {
+		this.orb.detect(imageData.getImage(), imageData.getKeypoints());
+		this.orb.compute(imageData.getImage(), imageData.getKeypoints(), imageData.getDescriptors());
 	}
 
 }

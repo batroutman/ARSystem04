@@ -1,7 +1,5 @@
-import java.util.ArrayList;
-import java.util.List;
-
 import org.opencv.core.Core;
+import org.opencv.features2d.ORB;
 
 import ARSystem04.PoseEstimator;
 import ARSystem04.TestPipeline;
@@ -45,11 +43,19 @@ public class ARBootstrapper {
 	}
 
 	public void tests() {
-		List<Double> list = new ArrayList<Double>(4);
-		list.set(0, 7.0);
-
-		pl(list.get(0));
-
+		ORB orb = ORB.create();
+		pl("orb.getDefaultName(): " + orb.getDefaultName());
+		pl("orb.getEdgeThreshold(): " + orb.getEdgeThreshold());
+		pl("orb.getFastThreshold(): " + orb.getFastThreshold());
+		pl("orb.getFirstLevel(): " + orb.getFirstLevel());
+		pl("orb.getMaxFeatures(): " + orb.getMaxFeatures());
+		pl("orb.getNLevels(): " + orb.getNLevels());
+		pl("orb.getPatchSize(): " + orb.getPatchSize());
+		pl("orb.getScaleFactor(): " + orb.getScaleFactor());
+		pl("orb.getScoreType(): " + orb.getScoreType());
+		pl("orb.getWTA_K(): " + orb.getWTA_K());
+		pl("ORB.FAST_SCORE: " + ORB.FAST_SCORE);
+		pl("ORB.HARRIS_SCORE: " + ORB.HARRIS_SCORE);
 	}
 
 	public static void p(Object s) {
