@@ -7,6 +7,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 
 import types.ImageData;
+import types.Point3D;
 import types.Pose;
 
 public class Map {
@@ -16,6 +17,8 @@ public class Map {
 	protected List<Keyframe> keyframes = new ArrayList<Keyframe>();
 	protected Keyframe currentKeyframe = null;
 	protected Initializer initializer = new Initializer(this);
+
+	protected List<Point3D> allPoints = new ArrayList<Point3D>();
 
 	public Map() {
 
@@ -59,6 +62,14 @@ public class Map {
 
 	}
 
+	public List<Pose> getCameras() {
+		List<Pose> cameras = new ArrayList<Pose>();
+		for (int i = 0; i < this.keyframes.size(); i++) {
+			cameras.add(this.keyframes.get(i).getPose());
+		}
+		return cameras;
+	}
+
 	public List<Keyframe> getKeyframes() {
 		return keyframes;
 	}
@@ -89,6 +100,14 @@ public class Map {
 
 	public void setInitialized(boolean initialized) {
 		this.initialized = initialized;
+	}
+
+	public List<Point3D> getAllPoints() {
+		return allPoints;
+	}
+
+	public void setAllPoints(List<Point3D> allPoints) {
+		this.allPoints = allPoints;
 	}
 
 }

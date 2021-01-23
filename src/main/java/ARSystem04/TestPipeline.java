@@ -109,6 +109,8 @@ public class TestPipeline extends PoseEstimator {
 			out.features = processedImage.getKeypoints().toList();
 			out.numFeatures = out.features.size();
 			out.correspondences = correspondences;
+			out.cameras = this.map.getCameras();
+			out.points = this.map.getAllPoints();
 
 			this.outputBuffer.push(out);
 			this.frameNum++;

@@ -66,6 +66,7 @@ public class Initializer {
 		for (int i = 0; i < correspondences.size(); i++) {
 			Matrix point = Photogrammetry.triangulate(E, I, correspondences.get(i));
 			Point3D point3D = new Point3D(point.get(0, 0), point.get(1, 0), point.get(2, 0));
+			this.map.getAllPoints().add(point3D);
 			MapPoint mapPoint = matchedMapPoints.get(matches.get(i).queryIdx);
 			mapPoint.setPoint(point3D);
 		}
