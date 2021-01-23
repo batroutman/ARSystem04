@@ -9,6 +9,7 @@ import org.opencv.core.KeyPoint;
 import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.ImageData;
+import types.Pose;
 
 public class Initializer {
 
@@ -39,7 +40,10 @@ public class Initializer {
 		Keyframe referenceFrame = this.map.registerInitialKeyframe(this.referenceData);
 
 		// get correspondences against reference keyframe (: List<MapPoint>)
+		long start = System.currentTimeMillis();
 		List<DMatch> matches = ORBMatcher.matchDescriptors(referenceFrame, imageData.getDescriptors());
+		long end = System.currentTimeMillis();
+		Utils.pl("Matching time: " + (end - start) + "ms");
 		List<MapPoint> matchedMapPoints = new ArrayList<MapPoint>();
 		for (int i = 0; i < imageData.getDescriptors().rows(); i++) {
 			matchedMapPoints.add(null);
@@ -52,6 +56,7 @@ public class Initializer {
 		List<Correspondence2D2D> correspondences = this.inferCorrespondences(referenceFrame, imageData, matches);
 
 		// get sfm estimate from correspondences
+		Pose pose = Photogrammetry.SFMFundamentalMatrixEstimate(correspondences);
 
 		// triangulate all matched points
 
