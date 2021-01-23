@@ -14,6 +14,7 @@ import types.Correspondence2D2D;
 import types.FramePack;
 import types.ImageData;
 import types.PipelineOutput;
+import types.Pose;
 
 public class TestPipeline extends PoseEstimator {
 
@@ -78,8 +79,12 @@ public class TestPipeline extends PoseEstimator {
 			processedImage.detectAndComputeORB();
 
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+			Pose pose = new Pose();
 			if (!this.map.isInitialized()) {
 				correspondences = this.map.getInitializer().registerData(this.frameNum, processedImage);
+				if (this.map.isInitialized()) {
+					pose = new Pose(this.map.getCurrentKeyframe().getPose());
+				}
 			}
 
 			if (correspondences == null) {
@@ -90,6 +95,7 @@ public class TestPipeline extends PoseEstimator {
 			PipelineOutput out = new PipelineOutput();
 			long end = System.currentTimeMillis();
 			double fps = 1000.0 / (end - start);
+			out.pose = pose;
 			out.rawFrame = currentFrame.getRawFrame();
 			out.rawFrameBuffer = currentFrame.getRawFrameBuffer();
 			out.frameNum = this.frameNum;

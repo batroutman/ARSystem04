@@ -47,7 +47,7 @@ public class GUIComponents {
 		AR, PROCESSED, MAP, ALL
 	};
 
-	VIEW view = VIEW.PROCESSED;
+	VIEW view = VIEW.ALL;
 
 	public static enum FEATURE_DISPLAY {
 		BOXES, POINTS

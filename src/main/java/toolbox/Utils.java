@@ -1,6 +1,7 @@
 package toolbox;
 
 import org.joml.Matrix4f;
+import org.opencv.core.Mat;
 
 import Jama.Matrix;
 
@@ -70,6 +71,19 @@ public class Utils {
 		t = t.times(1 / t.normF());
 
 		return t;
+	}
+
+	public static Matrix MatToMatrix(Mat mat) {
+		double[] buffer = new double[mat.rows() * mat.cols()];
+		mat.get(0, 0, buffer);
+		Matrix matrix = new Matrix(mat.rows(), mat.cols());
+		for (int i = 0; i < matrix.getRowDimension(); i++) {
+			for (int j = 0; j < matrix.getColumnDimension(); j++) {
+				matrix.set(i, j, buffer[i * mat.cols() + j]);
+			}
+		}
+
+		return matrix;
 	}
 
 }

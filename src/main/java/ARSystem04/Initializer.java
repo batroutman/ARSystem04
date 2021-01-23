@@ -6,9 +6,11 @@ import java.util.List;
 import org.opencv.core.DMatch;
 import org.opencv.core.KeyPoint;
 
+import Jama.Matrix;
 import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.ImageData;
+import types.Point3D;
 import types.Pose;
 
 public class Initializer {
@@ -59,10 +61,19 @@ public class Initializer {
 		Pose pose = Photogrammetry.SFMFundamentalMatrixEstimate(correspondences);
 
 		// triangulate all matched points
+		Matrix E = pose.getHomogeneousMatrix();
+		Matrix I = Matrix.identity(4, 4);
+		for (int i = 0; i < correspondences.size(); i++) {
+			Matrix point = Photogrammetry.triangulate(E, I, correspondences.get(i));
+			Point3D point3D = new Point3D(point.get(0, 0), point.get(1, 0), point.get(2, 0));
+			MapPoint mapPoint = matchedMapPoints.get(matches.get(i).queryIdx);
+			mapPoint.setPoint(point3D);
+		}
 
 		// construct new keyframe
+		this.map.registerNewKeyframe(pose, imageData.getKeypoints(), imageData.getDescriptors(), matchedMapPoints);
 
-		// register keyframes with map and set current keyframe?
+		this.map.setInitialized(true);
 
 		return correspondences;
 
