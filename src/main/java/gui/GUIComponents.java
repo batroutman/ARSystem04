@@ -42,6 +42,8 @@ public class GUIComponents {
 	private DefaultInitializer initializer;
 	private volatile boolean running = false;
 	private volatile boolean hiding = false;
+	private long lastUpdate = 0;
+	private int updateInterval = 250;
 
 	public static enum VIEW {
 		AR, PROCESSED, MAP, ALL
@@ -261,7 +263,12 @@ public class GUIComponents {
 	}
 
 	public void updateFpsLabel(double fps) {
+		long time = System.currentTimeMillis();
+		if (time < this.lastUpdate + this.updateInterval) {
+			return;
+		}
 		this.fpsLabel.getTextState().setText("Framerate:        " + String.format("%.2f", fps) + " fps");
+		this.lastUpdate = time;
 	}
 
 	public void updateNumFeaturesLabel(int numFeatures) {

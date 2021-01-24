@@ -85,6 +85,8 @@ public class TestPipeline extends PoseEstimator {
 				if (this.map.isInitialized()) {
 					pose = new Pose(this.map.getCurrentKeyframe().getPose());
 				}
+			} else {
+				correspondences = this.map.getInitializer().registerData(this.frameNum, processedImage);
 			}
 
 			if (correspondences == null) {
@@ -116,7 +118,7 @@ public class TestPipeline extends PoseEstimator {
 			this.frameNum++;
 
 			try {
-				Thread.sleep(5);
+				Thread.sleep(1);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
