@@ -32,7 +32,9 @@ public class Initializer {
 		} else if (frameNum == 44) {
 			return this.initialize(imageData);
 		}
-		return null;
+		return ORBMatcher.matchDescriptors(this.referenceData.getKeypoints().toList(),
+				this.referenceData.getDescriptors(), imageData.getKeypoints().toList(), imageData.getDescriptors());
+
 	}
 
 	public List<Correspondence2D2D> initialize(ImageData imageData) {

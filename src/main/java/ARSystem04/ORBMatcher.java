@@ -11,7 +11,6 @@ import org.opencv.core.MatOfDMatch;
 import org.opencv.features2d.BFMatcher;
 import org.opencv.features2d.DescriptorMatcher;
 
-import toolbox.Utils;
 import types.Correspondence2D2D;
 
 public class ORBMatcher {
@@ -27,7 +26,7 @@ public class ORBMatcher {
 
 	}
 
-	public List<Correspondence2D2D> matchDescriptors(List<KeyPoint> referenceKeypoints, Mat referenceDescriptors,
+	public static List<Correspondence2D2D> matchDescriptors(List<KeyPoint> referenceKeypoints, Mat referenceDescriptors,
 			List<KeyPoint> currentKeypoints, Mat currentDescriptors) {
 
 		List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
@@ -39,9 +38,9 @@ public class ORBMatcher {
 		// existing train (referenceDescriptor) set
 		matcher.match(currentDescriptors, referenceDescriptors, matches);
 
-		Utils.pl("referenceDescriptors.rows(): " + referenceDescriptors.rows());
-		Utils.pl("currentDescriptors.rows(): " + currentDescriptors.rows());
-		Utils.pl("matches.rows(): " + matches.rows());
+//		Utils.pl("referenceDescriptors.rows(): " + referenceDescriptors.rows());
+//		Utils.pl("currentDescriptors.rows(): " + currentDescriptors.rows());
+//		Utils.pl("matches.rows(): " + matches.rows());
 
 		List<DMatch> listMatches = matches.toList();
 		for (int i = 0; i < listMatches.size(); i++) {

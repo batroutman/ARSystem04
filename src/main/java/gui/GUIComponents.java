@@ -261,7 +261,7 @@ public class GUIComponents {
 	}
 
 	public void updateFpsLabel(double fps) {
-		this.fpsLabel.getTextState().setText("Framerate:        " + fps + " fps");
+		this.fpsLabel.getTextState().setText("Framerate:        " + String.format("%.2f", fps) + " fps");
 	}
 
 	public void updateNumFeaturesLabel(int numFeatures) {

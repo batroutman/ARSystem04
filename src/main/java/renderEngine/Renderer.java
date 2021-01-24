@@ -189,8 +189,10 @@ public class Renderer {
 		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(0, 0, 0), 0, 0, 0, 1);
 		cameraShader.loadTransformationMatrix(transformationMatrix);
 		GL11.glBegin(GL11.GL_POINTS);
-		for (Point3D point : mapPoints) {
-			GL11.glVertex3d(point.getX(), point.getY(), point.getZ());
+		synchronized (mapPoints) {
+			for (Point3D point : mapPoints) {
+				GL11.glVertex3d(point.getX(), point.getY(), point.getZ());
+			}
 		}
 		GL11.glEnd();
 
