@@ -22,6 +22,7 @@ public class TestPipeline extends PoseEstimator {
 
 	protected ORBMatcher orbMatcher = new ORBMatcher();
 	protected Map map = new Map();
+	protected Tracker tracker = new Tracker(this.map);
 
 	ImageData firstFrame;
 	MatOfKeyPoint firstKeypoints;
@@ -80,13 +81,15 @@ public class TestPipeline extends PoseEstimator {
 
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 			Pose pose = new Pose();
+			List<MapPoint> correspondingMapPoints = new ArrayList<MapPoint>();
 			if (!this.map.isInitialized()) {
 				correspondences = this.map.getInitializer().registerData(this.frameNum, processedImage);
 				if (this.map.isInitialized()) {
 					pose = new Pose(this.map.getCurrentKeyframe().getPose());
 				}
 			} else {
-				correspondences = this.map.getInitializer().registerData(this.frameNum, processedImage);
+				tracker.trackMovement(processedImage.getKeypoints(), processedImage.getDescriptors(), correspondences,
+						correspondingMapPoints, pose);
 			}
 
 			if (correspondences == null) {
@@ -102,7 +105,7 @@ public class TestPipeline extends PoseEstimator {
 			out.rawFrameBuffer = currentFrame.getRawFrameBuffer();
 			out.frameNum = this.frameNum;
 			out.fps = fps;
-			Utils.pl(fps + " fps");
+//			Utils.pl(fps + " fps");
 
 			out.processedFrame = processedImage.getImage();
 			byte[] processedBuffer = new byte[processedImage.getImage().rows() * processedImage.getImage().cols()];
@@ -118,7 +121,7 @@ public class TestPipeline extends PoseEstimator {
 			this.frameNum++;
 
 			try {
-				Thread.sleep(1);
+				Thread.sleep(100);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

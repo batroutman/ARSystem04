@@ -32,6 +32,10 @@ public class Pose {
 	}
 
 	public Pose(Pose pose) {
+		this.setPose(pose);
+	}
+
+	public void setPose(Pose pose) {
 		timestamp = pose.timestamp;
 
 		qw = pose.qw;

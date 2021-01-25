@@ -1,9 +1,13 @@
 package toolbox;
 
+import org.ejml.data.DMatrixRMaj;
 import org.joml.Matrix4f;
 import org.opencv.core.Mat;
 
 import Jama.Matrix;
+import georegression.geometry.ConvertRotation3D_F64;
+import georegression.struct.so.Quaternion_F64;
+import types.Pose;
 
 public class Utils {
 
@@ -84,6 +88,35 @@ public class Utils {
 		}
 
 		return matrix;
+	}
+
+	public static Pose matrixToPose(Matrix E) {
+
+		DMatrixRMaj R = new DMatrixRMaj(3, 3);
+		R.add(0, 0, E.get(0, 0));
+		R.add(0, 1, E.get(0, 1));
+		R.add(0, 2, E.get(0, 2));
+		R.add(1, 0, E.get(1, 0));
+		R.add(1, 1, E.get(1, 1));
+		R.add(1, 2, E.get(1, 2));
+		R.add(2, 0, E.get(2, 0));
+		R.add(2, 1, E.get(2, 1));
+		R.add(2, 2, E.get(2, 2));
+
+		Quaternion_F64 q = ConvertRotation3D_F64.matrixToQuaternion(R, null);
+		q.normalize();
+
+		Pose tempPose = new Pose();
+
+		tempPose.setQw(q.w);
+		tempPose.setQx(q.x);
+		tempPose.setQy(q.y);
+		tempPose.setQz(q.z);
+
+		tempPose.setT(E.get(0, 3), E.get(1, 3), E.get(2, 3));
+
+		return tempPose;
+
 	}
 
 }

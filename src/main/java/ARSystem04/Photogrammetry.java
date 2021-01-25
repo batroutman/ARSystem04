@@ -8,8 +8,11 @@ import org.ejml.data.DMatrixRMaj;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
+import org.opencv.core.Point3;
 
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
@@ -182,6 +185,42 @@ public class Photogrammetry {
 		// System.out.println("X");
 		// X.print(5, 4);
 		return X;
+	}
+
+	public static Matrix OpenCVPnP(List<Point3> point3s, List<Point> points, Mat rvec, Mat tvec,
+			boolean useInitialGuess) {
+
+		MatOfPoint3f objectPoints = new MatOfPoint3f();
+		objectPoints.fromList(point3s);
+		MatOfPoint2f imagePoints = new MatOfPoint2f();
+		imagePoints.fromList(points);
+		Mat cameraMatrix = CameraIntrinsics.getKMat();
+
+		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, useInitialGuess,
+				Calib3d.SOLVEPNP_ITERATIVE);
+
+		Mat RMat = new Mat();
+		Calib3d.Rodrigues(rvec, RMat);
+		double[] RBuffer = new double[9];
+		RMat.get(0, 0, RBuffer);
+		double[] tBuffer = new double[3];
+		tvec.get(0, 0, tBuffer);
+
+		Matrix E = Matrix.identity(4, 4);
+		E.set(0, 0, RBuffer[0]);
+		E.set(0, 1, RBuffer[1]);
+		E.set(0, 2, RBuffer[2]);
+		E.set(1, 0, RBuffer[3]);
+		E.set(1, 1, RBuffer[4]);
+		E.set(1, 2, RBuffer[5]);
+		E.set(2, 0, RBuffer[6]);
+		E.set(2, 1, RBuffer[7]);
+		E.set(2, 2, RBuffer[8]);
+		E.set(0, 3, tBuffer[0]);
+		E.set(1, 3, tBuffer[1]);
+		E.set(2, 3, tBuffer[2]);
+
+		return E;
 	}
 
 }
