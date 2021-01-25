@@ -48,6 +48,11 @@ public class Pose {
 		Cz = pose.Cz;
 	}
 
+	public double getDistanceFrom(Pose pose) {
+		return Math.sqrt(Math.pow(this.Cx - pose.getCx(), 2) + Math.pow(this.Cy - pose.getCy(), 2)
+				+ Math.pow(this.Cz - pose.getCz(), 2));
+	}
+
 	public Matrix getHomogeneousMatrix() {
 		Matrix R = this.getRotationMatrix();
 		Matrix IC = Matrix.identity(4, 4);

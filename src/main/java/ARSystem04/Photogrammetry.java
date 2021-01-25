@@ -196,8 +196,31 @@ public class Photogrammetry {
 		imagePoints.fromList(points);
 		Mat cameraMatrix = CameraIntrinsics.getKMat();
 
-		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, useInitialGuess,
-				Calib3d.SOLVEPNP_ITERATIVE);
+		Mat inliers = new Mat();
+		Calib3d.solvePnPRansac(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, useInitialGuess,
+				50, 20, 0.9, inliers);
+
+		Utils.pl("Initial num of object points: " + objectPoints.rows());
+		Utils.pl("Num inliers: " + inliers.rows());
+
+		// if theres enough inliers, refine the estimate
+		if (inliers.rows() > 10) {
+			// load inliers
+			List<Point3> objectPointInliers = new ArrayList<Point3>();
+			List<Point> imagePointInliers = new ArrayList<Point>();
+			int[] inlierBuffer = new int[inliers.rows()];
+			inliers.get(0, 0, inlierBuffer);
+			for (int i = 0; i < inlierBuffer.length; i++) {
+				objectPointInliers.add(point3s.get(inlierBuffer[i]));
+				imagePointInliers.add(points.get(inlierBuffer[i]));
+			}
+
+			objectPoints.fromList(objectPointInliers);
+			imagePoints.fromList(imagePointInliers);
+
+			Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, true,
+					Calib3d.SOLVEPNP_ITERATIVE);
+		}
 
 		Mat RMat = new Mat();
 		Calib3d.Rodrigues(rvec, RMat);

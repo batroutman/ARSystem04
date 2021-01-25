@@ -27,17 +27,25 @@ public class Tracker {
 		this.map = map;
 	}
 
-	public void trackMovement(MatOfKeyPoint keypoints, Mat descriptors, List<Correspondence2D2D> outCorrespondences,
-			List<MapPoint> outCorrespondingMapPoints, Pose outPose) {
-		this.trackMovementFromKeyframe(this.map.getCurrentKeyframe(), keypoints, descriptors, outCorrespondences,
-				outCorrespondingMapPoints, outPose);
+	public int trackMovement(MatOfKeyPoint keypoints, Mat descriptors, List<Correspondence2D2D> outCorrespondences,
+			List<MapPoint> outCorrespondingMapPoints, List<Correspondence2D2D> outUntriangulatedCorrespondences,
+			List<MapPoint> outUntriangulatedMapPoints, Pose outPose) {
+		return this.trackMovementFromKeyframe(this.map.getCurrentKeyframe(), keypoints, descriptors, outCorrespondences,
+				outCorrespondingMapPoints, outUntriangulatedCorrespondences, outUntriangulatedMapPoints, outPose);
 	}
 
-	public void trackMovementFromKeyframe(Keyframe keyframe, MatOfKeyPoint keypoints, Mat descriptors,
-			List<Correspondence2D2D> outCorrespondences, List<MapPoint> outCorrespondingMapPoints, Pose outPose) {
+	// does full frame feature matching, generates correspondences, gets PnP pose,
+	// and returns the number of matches
+	public int trackMovementFromKeyframe(Keyframe keyframe, MatOfKeyPoint keypoints, Mat descriptors,
+			List<Correspondence2D2D> outCorrespondences, List<MapPoint> outCorrespondingMapPoints,
+			List<Correspondence2D2D> outUntriangulatedCorrespondences, List<MapPoint> outUntriangulatedMapPoints,
+			Pose outPose) {
 
 		outCorrespondences.clear();
 		outCorrespondingMapPoints.clear();
+		outUntriangulatedCorrespondences.clear();
+		outUntriangulatedMapPoints.clear();
+
 		List<KeyPoint> keypointList = keypoints.toList();
 		List<KeyPoint> keyframeKeypointList = keyframe.getKeypoints().toList();
 
@@ -46,6 +54,8 @@ public class Tracker {
 		}
 
 		List<DMatch> matches = ORBMatcher.matchDescriptors(keyframe, descriptors);
+		Utils.pl("number of features: " + descriptors.rows());
+		Utils.pl("number of matches: " + matches.size());
 
 		// generate correspondences, map point list, and input for PnP
 		int numTracked = 0;
@@ -67,6 +77,8 @@ public class Tracker {
 
 			// if it is already triangulated, extract point data for PnP
 			if (mp.getPoint() == null) {
+				outUntriangulatedCorrespondences.add(c);
+				outUntriangulatedMapPoints.add(mp);
 				continue;
 			}
 
@@ -85,6 +97,8 @@ public class Tracker {
 		long end = System.currentTimeMillis();
 		Utils.pl("PnP time: " + (end - start) + "ms");
 		outPose.setPose(Utils.matrixToPose(E));
+
+		return matches.size();
 
 	}
 

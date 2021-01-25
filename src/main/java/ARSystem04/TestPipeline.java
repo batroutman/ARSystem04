@@ -6,6 +6,7 @@ import java.util.List;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 
+import Jama.Matrix;
 import buffers.Buffer;
 import buffers.QueuedBuffer;
 import buffers.SingletonBuffer;
@@ -14,6 +15,7 @@ import types.Correspondence2D2D;
 import types.FramePack;
 import types.ImageData;
 import types.PipelineOutput;
+import types.Point3D;
 import types.Pose;
 
 public class TestPipeline extends PoseEstimator {
@@ -65,6 +67,7 @@ public class TestPipeline extends PoseEstimator {
 		while (keepGoing) {
 
 			long start = System.currentTimeMillis();
+			Utils.pl("frameNum: " + this.frameNum);
 
 			// get the next frame
 			FramePack currentFrame = this.inputBuffer.getNext();
@@ -82,14 +85,48 @@ public class TestPipeline extends PoseEstimator {
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 			Pose pose = new Pose();
 			List<MapPoint> correspondingMapPoints = new ArrayList<MapPoint>();
+			List<Correspondence2D2D> untriangulatedCorrespondences = new ArrayList<Correspondence2D2D>();
+			List<MapPoint> untriangulatedMapPoints = new ArrayList<MapPoint>();
+
 			if (!this.map.isInitialized()) {
+
+				// register keypoints and descriptors with initializer until it can initialize
+				// the map
 				correspondences = this.map.getInitializer().registerData(this.frameNum, processedImage);
+
+				// if it initialized this frame, get the map's new keyframe as the current pose
 				if (this.map.isInitialized()) {
 					pose = new Pose(this.map.getCurrentKeyframe().getPose());
 				}
+
 			} else {
-				tracker.trackMovement(processedImage.getKeypoints(), processedImage.getDescriptors(), correspondences,
-						correspondingMapPoints, pose);
+
+				// perform routine PnP pose estimation
+				int numMatches = tracker.trackMovement(processedImage.getKeypoints(), processedImage.getDescriptors(),
+						correspondences, correspondingMapPoints, untriangulatedCorrespondences, untriangulatedMapPoints,
+						pose);
+
+				// if poses are far enough away, triangulate untriangulated points
+				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
+						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
+				Utils.pl("number of untriangulated points: " + untriangulatedMapPoints.size());
+				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1) {
+					for (int i = 0; i < untriangulatedCorrespondences.size(); i++) {
+						Correspondence2D2D c = untriangulatedCorrespondences.get(i);
+						Matrix pointMatrix = Photogrammetry.triangulate(pose.getHomogeneousMatrix(),
+								this.map.getCurrentKeyframe().getPose().getHomogeneousMatrix(), c);
+						Point3D point3D = new Point3D(pointMatrix.get(0, 0), pointMatrix.get(1, 0),
+								pointMatrix.get(2, 0));
+						untriangulatedMapPoints.get(i).setPoint(point3D);
+					}
+				}
+
+				// if starting to lose tracking, generate new keyframe
+				if (numMatches < 100) {
+					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
+							correspondingMapPoints);
+				}
+
 			}
 
 			if (correspondences == null) {
@@ -121,7 +158,7 @@ public class TestPipeline extends PoseEstimator {
 			this.frameNum++;
 
 			try {
-				Thread.sleep(100);
+				Thread.sleep(1);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
