@@ -189,10 +189,8 @@ public class Renderer {
 		Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(0, 0, 0), 0, 0, 0, 1);
 		cameraShader.loadTransformationMatrix(transformationMatrix);
 		GL11.glBegin(GL11.GL_POINTS);
-		synchronized (mapPoints) {
-			for (Point3D point : mapPoints) {
-				GL11.glVertex3d(point.getX(), point.getY(), point.getZ());
-			}
+		for (int i = 0; i < mapPoints.size(); i++) {
+			GL11.glVertex3d(mapPoints.get(i).getX(), mapPoints.get(i).getY(), mapPoints.get(i).getZ());
 		}
 		GL11.glEnd();
 
@@ -200,12 +198,10 @@ public class Renderer {
 	}
 
 	public void renderCameras(Camera mapCamera, StaticShader cameraShader, List<Pose> poses, float lineWidth) {
-		synchronized (poses) {
-			for (Pose pose : poses) {
-				this.renderCamera(mapCamera, cameraShader, (float) pose.getRotXDeg(), (float) pose.getRotYDeg(),
-						(float) pose.getRotZDeg(), (float) pose.getCx(), (float) pose.getCy(), (float) pose.getCz(),
-						lineWidth, 1, 0, 0);
-			}
+		for (int i = 0; i < poses.size(); i++) {
+			this.renderCamera(mapCamera, cameraShader, (float) poses.get(i).getRotXDeg(),
+					(float) poses.get(i).getRotYDeg(), (float) poses.get(i).getRotZDeg(), (float) poses.get(i).getCx(),
+					(float) poses.get(i).getCy(), (float) poses.get(i).getCz(), lineWidth, 1, 0, 0);
 		}
 	}
 

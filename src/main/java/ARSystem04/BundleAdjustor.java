@@ -3,7 +3,7 @@ package ARSystem04;
 import java.util.List;
 
 import org.ddogleg.optimization.lm.ConfigLevenbergMarquardt;
-import org.opencv.core.Point;
+
 import boofcv.abst.geo.bundle.BundleAdjustment;
 import boofcv.abst.geo.bundle.ScaleSceneStructure;
 import boofcv.abst.geo.bundle.SceneObservations;
@@ -12,9 +12,7 @@ import boofcv.alg.geo.bundle.cameras.BundlePinhole;
 import boofcv.factory.geo.ConfigBundleAdjustment;
 import boofcv.factory.geo.FactoryMultiView;
 import georegression.geometry.ConvertRotation3D_F64;
-import georegression.struct.point.Vector3D_F64;
 import georegression.struct.se.Se3_F64;
-import georegression.struct.so.Quaternion_F64;
 import runtimevars.CameraIntrinsics;
 import toolbox.Utils;
 import types.Point3D;
@@ -26,8 +24,8 @@ public class BundleAdjustor {
 	// (cameras). If 3 cameras and 10 points, observations is a list of size
 	// 10,
 	// with the sublists being size 3
-	public static void bundleAdjust(List<Pose> cameras, List<Point3D> point3Ds, List<List<Point>> obsv,
-			int maxIterations) {
+	public static SceneStructureMetric bundleAdjust(List<Pose> cameras, List<Point3D> point3Ds,
+			List<List<Observation>> obsv, int maxIterations) {
 
 		// boofCV
 		SceneStructureMetric scene = new SceneStructureMetric(false);
@@ -57,8 +55,11 @@ public class BundleAdjustor {
 		// load projected observations into observations variable
 		for (int pointID = 0; pointID < obsv.size(); pointID++) {
 			for (int cameraID = 0; cameraID < obsv.get(pointID).size(); cameraID++) {
-				float pixelX = (float) obsv.get(pointID).get(cameraID).x;
-				float pixelY = (float) obsv.get(pointID).get(cameraID).y;
+				if (obsv.get(pointID).get(cameraID) == null) {
+					continue;
+				}
+				float pixelX = (float) obsv.get(pointID).get(cameraID).getPoint().x;
+				float pixelY = (float) obsv.get(pointID).get(cameraID).getPoint().y;
 				observations.getView(cameraID).add(pointID, pixelX, pixelY);
 			}
 		}
@@ -124,7 +125,7 @@ public class BundleAdjustor {
 
 			Utils.pl("****************************************************************\n\n\n\n");
 
-			return;
+			return scene;
 		}
 
 		// Print out how much it improved the model
@@ -136,25 +137,27 @@ public class BundleAdjustor {
 		// step.
 		bundleScale.undoScale(scene, observations);
 
-		// load points from scene back into input
-		for (int i = 0; i < scene.getPoints().size(); i++) {
-			point3Ds.get(i).setX(scene.getPoints().get(i).getX());
-			point3Ds.get(i).setY(scene.getPoints().get(i).getY());
-			point3Ds.get(i).setZ(scene.getPoints().get(i).getZ());
-		}
+//		// load points from scene back into input
+//		for (int i = 0; i < scene.getPoints().size(); i++) {
+//			point3Ds.get(i).setX(scene.getPoints().get(i).getX());
+//			point3Ds.get(i).setY(scene.getPoints().get(i).getY());
+//			point3Ds.get(i).setZ(scene.getPoints().get(i).getZ());
+//		}
+//
+//		// load poses from scene back into input
+//		for (int viewID = 0; viewID < cameras.size(); viewID++) {
+//			Se3_F64 worldToView = scene.getViews().get(viewID).worldToView;
+//			Quaternion_F64 q = ConvertRotation3D_F64.matrixToQuaternion(worldToView.getR(), null);
+//			q.normalize();
+//			Vector3D_F64 t = worldToView.getTranslation();
+//			cameras.get(viewID).setQw(q.w);
+//			cameras.get(viewID).setQx(q.x);
+//			cameras.get(viewID).setQy(q.y);
+//			cameras.get(viewID).setQz(q.z);
+//			cameras.get(viewID).setT(t.x, t.y, t.z);
+//		}
 
-		// load poses from scene back into input
-		for (int viewID = 0; viewID < cameras.size(); viewID++) {
-			Se3_F64 worldToView = scene.getViews().get(viewID).worldToView;
-			Quaternion_F64 q = ConvertRotation3D_F64.matrixToQuaternion(worldToView.getR(), null);
-			q.normalize();
-			Vector3D_F64 t = worldToView.getTranslation();
-			cameras.get(viewID).setQw(q.w);
-			cameras.get(viewID).setQx(q.x);
-			cameras.get(viewID).setQy(q.y);
-			cameras.get(viewID).setQz(q.z);
-			cameras.get(viewID).setT(t.x, t.y, t.z);
-		}
+		return scene;
 
 	}
 

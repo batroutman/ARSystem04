@@ -6,6 +6,8 @@ import java.util.List;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 
+import ARSystem04.Map;
+
 // PipelineOutput is a type that packages all information that the desktop container may display for any single frame
 public class PipelineOutput {
 
@@ -34,6 +36,7 @@ public class PipelineOutput {
 	public List<KeyPoint> features = new ArrayList<KeyPoint>();
 
 	// map data
+	public Map map = new Map();
 	public List<Point3D> points = new ArrayList<Point3D>();
 	public List<Pose> cameras = new ArrayList<Pose>();
 

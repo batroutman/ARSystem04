@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 import org.opencv.core.KeyPoint;
 
+import ARSystem04.Map;
 import buffers.Buffer;
 import entities.Camera;
 import entities.Entity;
@@ -48,6 +49,7 @@ public class OpenGLARDisplay {
 	List<KeyPoint> features = new ArrayList<KeyPoint>();
 	List<Point3D> mapPoints = new ArrayList<Point3D>();
 	List<Pose> poses = new ArrayList<Pose>();
+	Map map = new Map();
 
 	// legui
 	GUIComponents gui = new GUIComponents();
@@ -166,6 +168,7 @@ public class OpenGLARDisplay {
 
 		context.updateGlfwWindow();
 		this.renderer.prepare();
+
 		if (this.gui.getView() == GUIComponents.VIEW.AR) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
@@ -180,18 +183,22 @@ public class OpenGLARDisplay {
 		} else if (this.gui.getView() == GUIComponents.VIEW.MAP) {
 
 			GL11.glViewport(0, 0, Parameters.screenWidth, Parameters.screenHeight);
-			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, this.pose, 3);
+			synchronized (this.map) {
+				this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, this.pose, 3);
+			}
 
 		} else if (this.gui.getView() == GUIComponents.VIEW.ALL) {
 
-			GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
-			this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
-			GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
-			this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
-					this.features, this.gui.getFeatureDisplayType());
-			GL11.glViewport(Parameters.screenWidth / 2, Parameters.screenHeight / 2, Parameters.screenWidth / 2,
-					Parameters.screenHeight / 2);
-			this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, this.pose, 2);
+			synchronized (this.map) {
+				GL11.glViewport(0, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
+				this.renderer.render(this.camera, this.entities, this.cameraShader, this.rawFrameEntity, this.bgShader);
+				GL11.glViewport(Parameters.screenWidth / 2, 0, Parameters.screenWidth / 2, Parameters.screenHeight / 2);
+				this.renderer.renderProcessedView(this.processedFrameEntity, this.bgShader, this.correspondences,
+						this.features, this.gui.getFeatureDisplayType());
+				GL11.glViewport(Parameters.screenWidth / 2, Parameters.screenHeight / 2, Parameters.screenWidth / 2,
+						Parameters.screenHeight / 2);
+				this.renderer.renderMapView(this.mapCamera, this.colorShader, this.mapPoints, this.poses, this.pose, 2);
+			}
 
 		}
 
@@ -257,6 +264,7 @@ public class OpenGLARDisplay {
 		}
 
 		this.pose = output.pose;
+		this.map = output.map;
 		this.correspondences = output.correspondences;
 		this.features = output.features;
 		this.mapPoints = output.points;

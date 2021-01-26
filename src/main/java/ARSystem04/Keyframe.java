@@ -3,6 +3,7 @@ package ARSystem04;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 
@@ -17,6 +18,16 @@ public class Keyframe {
 
 	public Keyframe() {
 
+	}
+
+	// given a keyframe, go through all of its map points and add an observation for
+	// the corresponding keypoint in the keyframe
+	public void registerObservations() {
+		List<KeyPoint> keypointList = this.getKeypoints().toList();
+		for (int i = 0; i < this.getMapPoints().size(); i++) {
+			MapPoint mp = this.getMapPoints().get(i);
+			mp.getObservations().add(new Observation(this, keypointList.get(i).pt));
+		}
 	}
 
 	public Pose getPose() {

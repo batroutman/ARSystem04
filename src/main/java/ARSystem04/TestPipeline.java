@@ -25,6 +25,7 @@ public class TestPipeline extends PoseEstimator {
 	protected ORBMatcher orbMatcher = new ORBMatcher();
 	protected Map map = new Map();
 	protected Tracker tracker = new Tracker(this.map);
+	protected MapOptimizer mapOptimizer = new MapOptimizer(this.map);
 
 	ImageData firstFrame;
 	MatOfKeyPoint firstKeypoints;
@@ -34,6 +35,13 @@ public class TestPipeline extends PoseEstimator {
 		@Override
 		public void run() {
 			mainloop();
+		}
+	};
+
+	Thread mapOptimizationThread = new Thread() {
+		@Override
+		public void run() {
+			mapOptimizer.mainloop();
 		}
 	};
 
@@ -50,6 +58,7 @@ public class TestPipeline extends PoseEstimator {
 	@Override
 	public void start() {
 		this.poseEstimationThread.start();
+		this.mapOptimizationThread.start();
 	}
 
 	@Override
@@ -97,6 +106,7 @@ public class TestPipeline extends PoseEstimator {
 				// if it initialized this frame, get the map's new keyframe as the current pose
 				if (this.map.isInitialized()) {
 					pose = new Pose(this.map.getCurrentKeyframe().getPose());
+					this.mapOptimizer.fullBundleAdjustment(10);
 				}
 
 			} else {
@@ -107,9 +117,9 @@ public class TestPipeline extends PoseEstimator {
 						pose);
 
 				// if poses are far enough away, triangulate untriangulated points
-				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
-						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
-				Utils.pl("number of untriangulated points: " + untriangulatedMapPoints.size());
+//				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
+//						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
+//				Utils.pl("number of untriangulated points: " + untriangulatedMapPoints.size());
 				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1) {
 					for (int i = 0; i < untriangulatedCorrespondences.size(); i++) {
 						Correspondence2D2D c = untriangulatedCorrespondences.get(i);
@@ -118,6 +128,10 @@ public class TestPipeline extends PoseEstimator {
 						Point3D point3D = new Point3D(pointMatrix.get(0, 0), pointMatrix.get(1, 0),
 								pointMatrix.get(2, 0));
 						untriangulatedMapPoints.get(i).setPoint(point3D);
+						synchronized (this.map) {
+							this.map.registerPoint(point3D);
+						}
+
 					}
 				}
 
@@ -125,6 +139,7 @@ public class TestPipeline extends PoseEstimator {
 				if (numMatches < 100) {
 					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
 							correspondingMapPoints);
+					this.mapOptimizer.fullBundleAdjustment(10);
 				}
 
 			}

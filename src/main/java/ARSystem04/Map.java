@@ -19,22 +19,32 @@ public class Map {
 	protected Initializer initializer = new Initializer(this);
 
 	protected List<Point3D> allPoints = new ArrayList<Point3D>();
+	protected List<MapPoint> allMapPoints = new ArrayList<MapPoint>();
 
 	public Map() {
 
 	}
 
 	public Keyframe registerInitialKeyframe(ImageData imageData) {
-		Keyframe keyframe = new Keyframe();
-		keyframe.setPose(new Pose());
-		keyframe.setKeypoints(imageData.getKeypoints());
-		keyframe.setDescriptors(imageData.getDescriptors());
-		for (int i = 0; i < keyframe.getDescriptors().rows(); i++) {
-			keyframe.getMapPoints().add(new MapPoint());
+		synchronized (this) {
+			Keyframe keyframe = new Keyframe();
+			keyframe.setPose(new Pose());
+			keyframe.setKeypoints(imageData.getKeypoints());
+			keyframe.setDescriptors(imageData.getDescriptors());
+			for (int i = 0; i < keyframe.getDescriptors().rows(); i++) {
+				MapPoint mp = new MapPoint();
+				keyframe.getMapPoints().add(mp);
+				this.allMapPoints.add(mp);
+
+			}
+			keyframe.registerObservations();
+			this.keyframes.add(keyframe);
+
+			this.currentKeyframe = keyframe;
+
+			return keyframe;
 		}
-		this.keyframes.add(keyframe);
-		this.currentKeyframe = keyframe;
-		return keyframe;
+
 	}
 
 	// given a pose, keypoints, descriptors, and a list of the map points that are
@@ -43,22 +53,30 @@ public class Map {
 	// values
 	public Keyframe registerNewKeyframe(Pose pose, MatOfKeyPoint keypoints, Mat descriptors,
 			List<MapPoint> preExistingMapPoints) {
+		synchronized (this) {
+			// fill the map point list
+			for (int i = 0; i < preExistingMapPoints.size(); i++) {
+				if (preExistingMapPoints.get(i) == null) {
+					MapPoint mp = new MapPoint();
+					preExistingMapPoints.set(i, mp);
+					this.allMapPoints.add(mp);
 
-		// fill the map point list
-		for (int i = 0; i < preExistingMapPoints.size(); i++) {
-			preExistingMapPoints.set(i,
-					preExistingMapPoints.get(i) == null ? new MapPoint() : preExistingMapPoints.get(i));
+				}
+			}
+
+			Keyframe keyframe = new Keyframe();
+			keyframe.setPose(pose);
+			keyframe.setKeypoints(keypoints);
+			keyframe.setDescriptors(descriptors);
+			keyframe.setMapPoints(preExistingMapPoints);
+			keyframe.registerObservations();
+
+			this.keyframes.add(keyframe);
+
+			this.currentKeyframe = keyframe;
+
+			return keyframe;
 		}
-
-		Keyframe keyframe = new Keyframe();
-		keyframe.setPose(pose);
-		keyframe.setKeypoints(keypoints);
-		keyframe.setDescriptors(descriptors);
-		keyframe.setMapPoints(preExistingMapPoints);
-		this.keyframes.add(keyframe);
-		this.currentKeyframe = keyframe;
-
-		return keyframe;
 
 	}
 
@@ -68,6 +86,14 @@ public class Map {
 			cameras.add(this.keyframes.get(i).getPose());
 		}
 		return cameras;
+	}
+
+	public void registerMapPoint(MapPoint mp) {
+		this.allMapPoints.add(mp);
+	}
+
+	public void registerPoint(Point3D point) {
+		this.allPoints.add(point);
 	}
 
 	public List<Keyframe> getKeyframes() {
@@ -108,6 +134,14 @@ public class Map {
 
 	public void setAllPoints(List<Point3D> allPoints) {
 		this.allPoints = allPoints;
+	}
+
+	public List<MapPoint> getAllMapPoints() {
+		return allMapPoints;
+	}
+
+	public void setAllMapPoints(List<MapPoint> allMapPoints) {
+		this.allMapPoints = allMapPoints;
 	}
 
 }
