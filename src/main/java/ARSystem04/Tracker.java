@@ -28,21 +28,23 @@ public class Tracker {
 	}
 
 	public int trackMovement(MatOfKeyPoint keypoints, Mat descriptors, List<Correspondence2D2D> outCorrespondences,
-			List<MapPoint> outCorrespondingMapPoints, List<Correspondence2D2D> outUntriangulatedCorrespondences,
-			List<MapPoint> outUntriangulatedMapPoints, Pose outPose) {
+			List<MapPoint> outCorrespondenceMapPoints, List<MapPoint> outMapPointPerDescriptor,
+			List<Correspondence2D2D> outUntriangulatedCorrespondences, List<MapPoint> outUntriangulatedMapPoints,
+			Pose outPose) {
 		return this.trackMovementFromKeyframe(this.map.getCurrentKeyframe(), keypoints, descriptors, outCorrespondences,
-				outCorrespondingMapPoints, outUntriangulatedCorrespondences, outUntriangulatedMapPoints, outPose);
+				outCorrespondenceMapPoints, outMapPointPerDescriptor, outUntriangulatedCorrespondences,
+				outUntriangulatedMapPoints, outPose);
 	}
 
 	// does full frame feature matching, generates correspondences, gets PnP pose,
 	// and returns the number of matches
 	public int trackMovementFromKeyframe(Keyframe keyframe, MatOfKeyPoint keypoints, Mat descriptors,
-			List<Correspondence2D2D> outCorrespondences, List<MapPoint> outCorrespondingMapPoints,
-			List<Correspondence2D2D> outUntriangulatedCorrespondences, List<MapPoint> outUntriangulatedMapPoints,
-			Pose outPose) {
+			List<Correspondence2D2D> outCorrespondences, List<MapPoint> outCorrespondenceMapPoints,
+			List<MapPoint> outMapPointPerDescriptor, List<Correspondence2D2D> outUntriangulatedCorrespondences,
+			List<MapPoint> outUntriangulatedMapPoints, Pose outPose) {
 
 		outCorrespondences.clear();
-		outCorrespondingMapPoints.clear();
+		outMapPointPerDescriptor.clear();
 		outUntriangulatedCorrespondences.clear();
 		outUntriangulatedMapPoints.clear();
 
@@ -50,7 +52,7 @@ public class Tracker {
 		List<KeyPoint> keyframeKeypointList = keyframe.getKeypoints().toList();
 
 		for (int i = 0; i < descriptors.rows(); i++) {
-			outCorrespondingMapPoints.add(null);
+			outMapPointPerDescriptor.add(null);
 		}
 
 		List<DMatch> matches = ORBMatcher.matchDescriptors(keyframe, descriptors);
@@ -73,7 +75,8 @@ public class Tracker {
 
 			// set map point in list
 			MapPoint mp = keyframe.getMapPoints().get(matches.get(i).trainIdx);
-			outCorrespondingMapPoints.set(matches.get(i).queryIdx, mp);
+			outMapPointPerDescriptor.set(matches.get(i).queryIdx, mp);
+			outCorrespondenceMapPoints.add(mp);
 
 			// if it is already triangulated, extract point data for PnP
 			if (mp.getPoint() == null) {

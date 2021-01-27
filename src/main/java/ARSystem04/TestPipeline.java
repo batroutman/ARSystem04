@@ -94,7 +94,8 @@ public class TestPipeline extends PoseEstimator {
 
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 			Pose pose = new Pose();
-			List<MapPoint> correspondingMapPoints = new ArrayList<MapPoint>();
+			List<MapPoint> mapPointPerDescriptor = new ArrayList<MapPoint>();
+			List<MapPoint> correspondenceMapPoints = new ArrayList<MapPoint>();
 			List<Correspondence2D2D> untriangulatedCorrespondences = new ArrayList<Correspondence2D2D>();
 			List<MapPoint> untriangulatedMapPoints = new ArrayList<MapPoint>();
 
@@ -114,8 +115,12 @@ public class TestPipeline extends PoseEstimator {
 
 				// perform routine PnP pose estimation
 				int numMatches = tracker.trackMovement(processedImage.getKeypoints(), processedImage.getDescriptors(),
-						correspondences, correspondingMapPoints, untriangulatedCorrespondences, untriangulatedMapPoints,
-						pose);
+						correspondences, correspondenceMapPoints, mapPointPerDescriptor, untriangulatedCorrespondences,
+						untriangulatedMapPoints, pose);
+
+				// pair-wise BA
+				this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
+						correspondenceMapPoints, correspondences, 10);
 
 				// if poses are far enough away, triangulate untriangulated points
 				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1
@@ -128,7 +133,7 @@ public class TestPipeline extends PoseEstimator {
 				// if starting to lose tracking, generate new keyframe
 				if (numMatches < 100) {
 					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
-							correspondingMapPoints);
+							mapPointPerDescriptor);
 					this.mapOptimizer.fullBundleAdjustment(10);
 				}
 

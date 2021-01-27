@@ -18,6 +18,7 @@ import georegression.struct.se.Se3_F64;
 import georegression.struct.so.Quaternion_F64;
 import runtimevars.CameraIntrinsics;
 import toolbox.Utils;
+import types.Correspondence2D2D;
 import types.Point3D;
 import types.Pose;
 
@@ -165,63 +166,87 @@ public class MapOptimizer {
 		}
 	}
 
-	public void pairBundleAdjustment(Pose pose) {
+	// perform bundle adjustment for the current pose and the current keyframe pose
+	public void pairBundleAdjustment(Pose currentPose, Pose keyframePose, List<MapPoint> matchedMapPoints,
+			List<Correspondence2D2D> correspondences, int iterations) {
+
+		SceneStructureMetric scene = new SceneStructureMetric(false);
+		SceneObservations observations = new SceneObservations();
+		observations.initialize(2);
+
+		// load camera poses into scene
+		BundlePinhole camera = new BundlePinhole();
+		camera.fx = CameraIntrinsics.fx;
+		camera.fy = CameraIntrinsics.fy;
+		camera.cx = CameraIntrinsics.cx;
+		camera.cy = CameraIntrinsics.cy;
+		camera.skew = CameraIntrinsics.s;
+
+		// init camera list
 		List<Pose> cameras = new ArrayList<Pose>();
-		List<Point3D> point3Ds = new ArrayList<Point3D>();
-		List<List<Observation>> obsv = new ArrayList<List<Observation>>();
 
-		// lock the map and load data
+		// init pruned lists for points
+		List<Correspondence2D2D> prunedCorrespondences = new ArrayList<Correspondence2D2D>();
+		List<Point3D> prunedPoints = new ArrayList<Point3D>();
+
+		// lock the map and load the scene
 		synchronized (this.map) {
-			// load camera list
-			for (int i = 0; i < this.map.getKeyframes().size(); i++) {
-				cameras.add(this.map.getKeyframes().get(i).getPose());
-			}
 
-			// go through map points and add point3Ds and observations
-			for (int i = 0; i < this.map.getAllMapPoints().size(); i++) {
-
-				// add point
-				MapPoint mp = this.map.getAllMapPoints().get(i);
-				Point3D point = mp.getPoint();
-				if (point == null) {
+			// prune untracked points and load into lists
+			for (int i = 0; i < matchedMapPoints.size(); i++) {
+				if (matchedMapPoints.get(i).getPoint() == null) {
 					continue;
 				}
-				point3Ds.add(point);
+				prunedCorrespondences.add(correspondences.get(i));
+				prunedPoints.add(matchedMapPoints.get(i).getPoint());
+			}
 
-				// initialize observation list
-				List<Observation> observations = new ArrayList<Observation>();
-				for (int j = 0; j < cameras.size(); j++) {
-					observations.add(null);
-				}
+			// initialize the scene
+			scene.initialize(2, 2, prunedPoints.size());
 
-				// for each observation on this point, find its corresponding keyframe
-				for (int j = 0; j < mp.getObservations().size(); j++) {
-					Observation o = mp.getObservations().get(j);
-					int index = -1;
-					for (int k = 0; k < cameras.size() && index == -1; k++) {
-						index = cameras.get(k) == o.getKeyframe().getPose() ? k : -1;
-					}
-					observations.set(index, o);
-				}
+			// load cameras/views
+			cameras.add(keyframePose);
+			cameras.add(currentPose);
 
-				// add observation list to obsv
-				obsv.add(observations);
+			for (int i = 0; i < cameras.size(); i++) {
+				Se3_F64 worldToCameraGL = new Se3_F64();
+				ConvertRotation3D_F64.quaternionToMatrix(cameras.get(i).getQw(), cameras.get(i).getQx(),
+						cameras.get(i).getQy(), cameras.get(i).getQz(), worldToCameraGL.R);
+				worldToCameraGL.T.x = cameras.get(i).getTx();
+				worldToCameraGL.T.y = cameras.get(i).getTy();
+				worldToCameraGL.T.z = cameras.get(i).getTz();
+				scene.setCamera(i, true, camera);
+				scene.setView(i, cameras.get(i).isFixed(), worldToCameraGL);
+				scene.connectViewToCamera(i, i);
+			}
 
+			// load observations to scene
+			for (int i = 0; i < prunedCorrespondences.size(); i++) {
+				Correspondence2D2D c = prunedCorrespondences.get(i);
+				observations.getView(0).add(i, (float) c.getX0(), (float) c.getY0());
+				observations.getView(1).add(i, (float) c.getX1(), (float) c.getY1());
+			}
+
+			// load 3D points into scene
+			for (int i = 0; i < prunedPoints.size(); i++) {
+				float x = (float) prunedPoints.get(i).getX();
+				float y = (float) prunedPoints.get(i).getY();
+				float z = (float) prunedPoints.get(i).getZ();
+				scene.setPoint(i, x, y, z);
 			}
 
 		}
 
-		// perform BA
-		SceneStructureMetric scene = BundleAdjustor.bundleAdjust(cameras, point3Ds, obsv, 100);
+		// perform bundle adjustment
+		this.bundleAdjustScene(scene, observations, iterations);
 
 		// lock the map and update the points
 		synchronized (this.map) {
-
 			// load points from scene back into input
 			for (int i = 0; i < scene.getPoints().size(); i++) {
-				point3Ds.get(i).setX(scene.getPoints().get(i).getX());
-				point3Ds.get(i).setY(scene.getPoints().get(i).getY());
-				point3Ds.get(i).setZ(scene.getPoints().get(i).getZ());
+				prunedPoints.get(i).setX(scene.getPoints().get(i).getX());
+				prunedPoints.get(i).setY(scene.getPoints().get(i).getY());
+				prunedPoints.get(i).setZ(scene.getPoints().get(i).getZ());
 			}
 
 			// load poses from scene back into input
@@ -237,6 +262,7 @@ public class MapOptimizer {
 				cameras.get(viewID).setT(t.x, t.y, t.z);
 			}
 		}
+
 	}
 
 	public void bundleAdjustScene(SceneStructureMetric scene, SceneObservations observations, int maxIterations) {
@@ -281,6 +307,7 @@ public class MapOptimizer {
 		// Print out how much it improved the model
 		System.out.println();
 		System.out.printf("Error reduced by %.1f%%\n", (100.0 * (errorBefore / bundleAdjustment.getFitScore() - 1.0)));
+		System.out.println("new error: " + bundleAdjustment.getFitScore());
 		System.out.println((System.currentTimeMillis() - startTime) / 1000.0);
 
 		// Return parameters to their original scaling. Can probably skip this
