@@ -55,7 +55,7 @@ public class GUIComponents {
 		BOXES, POINTS, NONE
 	};
 
-	FEATURE_DISPLAY featureDisplayType = FEATURE_DISPLAY.NONE;
+	FEATURE_DISPLAY featureDisplayType = FEATURE_DISPLAY.POINTS;
 
 	private Widget mainWidget = new Widget(20, 20, 200, 400);
 	private Label viewLabel = new Label(10, 10, 100, 10);

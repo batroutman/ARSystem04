@@ -176,7 +176,7 @@ public class TestPipeline extends PoseEstimator {
 			this.frameNum++;
 
 			try {
-				Thread.sleep(1);
+				Thread.sleep(100);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
