@@ -123,15 +123,23 @@ public class TestPipeline extends PoseEstimator {
 						correspondenceMapPoints, correspondences, 10);
 
 				// if poses are far enough away, triangulate untriangulated points
-				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1
+				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
+						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
+				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 0.2
 						&& untriangulatedCorrespondences.size() > 0) {
 
+					Utils.pl("Triangulating map points: " + untriangulatedMapPoints.size());
 					this.triangulateUntrackedMapPoints(pose, untriangulatedCorrespondences, untriangulatedMapPoints);
+
+					// pair-wise BA
+					this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
+							correspondenceMapPoints, correspondences, 10);
 
 				}
 
 				// if starting to lose tracking, generate new keyframe
 				if (numMatches < 100) {
+					Utils.pl("registering  new keyframe");
 					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
 							mapPointPerDescriptor);
 					this.mapOptimizer.fullBundleAdjustment(10);

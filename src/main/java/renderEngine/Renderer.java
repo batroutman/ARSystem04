@@ -110,7 +110,7 @@ public class Renderer {
 		bgShader.stop();
 		if (displayType == GUIComponents.FEATURE_DISPLAY.BOXES) {
 			this.renderFeatureBoxes(features);
-		} else {
+		} else if (displayType == GUIComponents.FEATURE_DISPLAY.POINTS) {
 			this.renderFeaturePoints(features);
 		}
 
