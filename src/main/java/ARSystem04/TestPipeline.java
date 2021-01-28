@@ -91,6 +91,7 @@ public class TestPipeline extends PoseEstimator {
 			ImageData processedImage = new ImageData(currentFrame.getProcessedFrame());
 			processedImage.autoContrast();
 			processedImage.detectAndComputeORB();
+//			processedImage.detectAndComputeHomogeneousORB();
 
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
 			Pose pose = new Pose();
@@ -123,9 +124,7 @@ public class TestPipeline extends PoseEstimator {
 						correspondenceMapPoints, correspondences, 10);
 
 				// if poses are far enough away, triangulate untriangulated points
-				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
-						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
-				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 0.2
+				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1
 						&& untriangulatedCorrespondences.size() > 0) {
 
 					Utils.pl("Triangulating map points: " + untriangulatedMapPoints.size());
@@ -176,7 +175,10 @@ public class TestPipeline extends PoseEstimator {
 			this.frameNum++;
 
 			try {
-				Thread.sleep(100);
+				int targetFrametime = 30;
+				long now = System.currentTimeMillis();
+				long sleepTime = targetFrametime - (now - start) < 0 ? 0 : targetFrametime - (now - start);
+				Thread.sleep(sleepTime);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

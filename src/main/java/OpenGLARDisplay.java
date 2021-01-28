@@ -273,6 +273,7 @@ public class OpenGLARDisplay {
 		this.gui.updateFpsLabel(output.fps);
 		this.gui.updateFrameNumLabel(output.frameNum);
 		this.gui.updateNumFeaturesLabel(output.numFeatures);
+		this.gui.updateNumCorrespondencesLabel(this.correspondences.size());
 
 	}
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
@@ -38,13 +39,6 @@ public class ImageData {
 
 	public void detectAndComputeORB() {
 		orb.detect(this.image, this.keypoints);
-		List<KeyPoint> listKeypoints = this.keypoints.toList();
-		for (int i = 0; i < listKeypoints.size(); i++) {
-			KeyPoint keypoint = listKeypoints.get(i);
-			Utils.pl("keypoint ==> angle: " + keypoint.angle + ",  class_id: " + keypoint.class_id + ",  octave: "
-					+ keypoint.octave + ",  pt.x: " + keypoint.pt.x + ",  pt.y: " + keypoint.pt.y + ",  response: "
-					+ keypoint.response + ",  size: " + keypoint.size);
-		}
 		orb.compute(this.image, this.keypoints, this.descriptors);
 	}
 
@@ -54,7 +48,6 @@ public class ImageData {
 	}
 
 	public void detectHomogeneousFeatures() {
-		List<MatOfKeyPoint> cellKeypoints = new ArrayList<MatOfKeyPoint>();
 
 		// downscale the image to extract FAST features with patch size 28, 56, and 112
 		Mat down28 = this.downScale(this.image);
@@ -121,6 +114,16 @@ public class ImageData {
 		sscKeyPoints28.addAll(sscKeyPoints56);
 		sscKeyPoints28.addAll(sscKeyPoints112);
 
+		int[] patchSizes = { 31, 62, 124 };
+		HashMap<Integer, List<Integer>> u_max_map = this.getUMaxMap(patchSizes);
+		byte[] imgBuffer = new byte[this.image.rows() * this.image.cols()];
+		this.image.get(0, 0, imgBuffer);
+
+		long start = System.currentTimeMillis();
+		this.ICAngles(imgBuffer, this.image.cols(), this.image.rows(), sscKeyPoints28, u_max_map);
+		long end = System.currentTimeMillis();
+		Utils.pl("ICAngle time: " + (end - start) + "ms");
+
 		this.keypoints.fromList(sscKeyPoints28);
 
 	}
@@ -169,7 +172,7 @@ public class ImageData {
 				m_01 += v * v_sum;
 			}
 
-			pts.get(ptidx).angle = (float) Math.atan2((float) m_01, (float) m_10);
+			pts.get(ptidx).angle = (float) Core.fastAtan2((float) m_01, (float) m_10);
 		}
 	}
 
@@ -215,6 +218,15 @@ public class ImageData {
 		Mat dest = new Mat();
 		Imgproc.pyrDown(src, dest, new Size((int) (src.cols() / 2), (int) (src.rows() / 2)));
 		return dest;
+	}
+
+	public void filterKeypoints() {
+		int numRetPoints = 300;
+		float tolerance = 0.1f;
+		int cols = this.image.cols();
+		int rows = this.image.rows();
+		List<KeyPoint> filteredKeypoints = ssc(this.keypoints.toList(), numRetPoints, tolerance, cols, rows);
+		this.keypoints.fromList(filteredKeypoints);
 	}
 
 	/*
@@ -315,6 +327,73 @@ public class ImageData {
 		}
 
 		return kp;
+	}
+
+	// get features in grid cells of image (CHANGING MASKS IS UNUSABLY SLOW (333ms))
+	public void detectHomogeneousKeypoints() {
+
+		int gridWidth = 10;
+		int gridHeight = 10;
+
+		// calculate cell width and height in pixels
+		int cellWidth = this.image.cols() / gridWidth;
+		int cellHeight = this.image.rows() / gridHeight;
+
+		long start = System.currentTimeMillis();
+		// generate masks
+		List<Mat> masks = new ArrayList<Mat>();
+		for (int row = 0; row < gridHeight; row++) {
+			for (int col = 0; col < gridWidth; col++) {
+				byte[] buffer = new byte[this.image.rows() * this.image.cols()];
+				this.loadZeros(buffer);
+
+				int startX = col * cellWidth;
+				int startY = row * cellHeight;
+				int endX = startX + cellWidth > this.image.cols() ? this.image.cols() : startX + cellWidth;
+				int endY = startY + cellHeight > this.image.rows() ? this.image.rows() : startY + cellHeight;
+
+				this.load255(buffer, startX, startY, endX, endY);
+				Mat mask = new Mat(this.image.rows(), this.image.cols(), this.image.type());
+				mask.put(0, 0, buffer);
+				masks.add(mask);
+
+			}
+		}
+
+		long end = System.currentTimeMillis();
+		Utils.pl("mask generation time: " + (end - start) + "ms");
+
+		// repeatedly call ORB with each mask to get keypoints
+		List<List<KeyPoint>> allKeypoints = new ArrayList<List<KeyPoint>>();
+		for (int i = 0; i < masks.size(); i++) {
+			Mat mask = masks.get(i);
+			MatOfKeyPoint maskedKeypoints = new MatOfKeyPoint();
+			this.orb.detect(this.image, maskedKeypoints, mask);
+			allKeypoints.add(maskedKeypoints.toList());
+		}
+
+		// merge lists and set
+		List<KeyPoint> keypoints = new ArrayList<KeyPoint>();
+		for (int i = 0; i < allKeypoints.size(); i++) {
+			keypoints.addAll(allKeypoints.get(i));
+		}
+
+		this.keypoints.fromList(keypoints);
+
+	}
+
+	public void loadZeros(byte[] buffer) {
+		for (int i = 0; i < buffer.length; i++) {
+			buffer[i] = 0;
+		}
+	}
+
+	public void load255(byte[] buffer, int startX, int startY, int endX, int endY) {
+		for (int x = startX; x < endX; x++) {
+			for (int y = startY; y < endY; y++) {
+				buffer[this.image.cols() * y + x] = (byte) 255;
+			}
+		}
 	}
 
 	public Mat getImage() {

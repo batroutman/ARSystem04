@@ -55,7 +55,7 @@ public class GUIComponents {
 		BOXES, POINTS, NONE
 	};
 
-	FEATURE_DISPLAY featureDisplayType = FEATURE_DISPLAY.POINTS;
+	FEATURE_DISPLAY featureDisplayType = FEATURE_DISPLAY.NONE;
 
 	private Widget mainWidget = new Widget(20, 20, 200, 400);
 	private Label viewLabel = new Label(10, 10, 100, 10);
@@ -72,9 +72,11 @@ public class GUIComponents {
 	private Label frameNumLabel = new Label(10, 10, 100, 10);
 	private Label fpsLabel = new Label(10, 10, 100, 10);
 	private Label numFeaturesLabel = new Label(10, 10, 100, 10);
+	private Label numCorrespondencesLabel = new Label(10, 10, 100, 10);
 
 	Component[] order = { viewLabel, arViewButton, processedViewButton, mapViewButton, allViewButton,
-			featureDisplayLabel, boxesButton, pointsButton, noneButton, frameNumLabel, fpsLabel, numFeaturesLabel };
+			featureDisplayLabel, boxesButton, pointsButton, noneButton, frameNumLabel, fpsLabel, numFeaturesLabel,
+			numCorrespondencesLabel };
 
 	public GUIComponents() {
 
@@ -122,6 +124,7 @@ public class GUIComponents {
 		this.frameNumLabel.getTextState().setText("Frame #: --");
 		this.fpsLabel.getTextState().setText("Framerate: --");
 		this.numFeaturesLabel.getTextState().setText("Number of Features: --");
+		this.numCorrespondencesLabel.getTextState().setText("Number of Correspondences: --");
 
 		this.arViewButton.setRadioButtonGroup(this.viewButtonGroup);
 		this.processedViewButton.setRadioButtonGroup(this.viewButtonGroup);
@@ -188,6 +191,7 @@ public class GUIComponents {
 		this.mainWidget.getContainer().add(this.fpsLabel);
 		this.mainWidget.getContainer().add(this.frameNumLabel);
 		this.mainWidget.getContainer().add(this.numFeaturesLabel);
+		this.mainWidget.getContainer().add(this.numCorrespondencesLabel);
 		return frame;
 	}
 
@@ -284,6 +288,10 @@ public class GUIComponents {
 
 	public void updateNumFeaturesLabel(int numFeatures) {
 		this.numFeaturesLabel.getTextState().setText("Number of Features:        " + numFeatures);
+	}
+
+	public void updateNumCorrespondencesLabel(int numCorrespondences) {
+		this.numCorrespondencesLabel.getTextState().setText("Number of Matches:        " + numCorrespondences);
 	}
 
 	public long getWindow() {
