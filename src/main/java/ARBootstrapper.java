@@ -9,8 +9,9 @@ import org.opencv.features2d.Features2d;
 import org.opencv.features2d.ORB;
 import org.opencv.highgui.HighGui;
 
+import ARSystem04.MockPipeline;
+import ARSystem04.MockPointData;
 import ARSystem04.PoseEstimator;
-import ARSystem04.TestPipeline;
 import buffers.Buffer;
 import buffers.SingletonBuffer;
 import buffers.TUMBuffer;
@@ -29,10 +30,10 @@ public class ARBootstrapper {
 	public void start() {
 
 		// OfflineFrameBuffer ofb = new OfflineFrameBuffer(filename, false);
-		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
+//		TUMBuffer tumBuffer = new TUMBuffer(tumFile, true);
 		Buffer<PipelineOutput> outputBuffer = new SingletonBuffer<PipelineOutput>();
-		PoseEstimator pipeline = new TestPipeline(tumBuffer, outputBuffer);
-		// ARPipeline pipeline = new MockPipeline(sfb, spb, sfb);
+//		PoseEstimator pipeline = new TestPipeline(tumBuffer, outputBuffer);
+		PoseEstimator pipeline = new MockPipeline(null, outputBuffer);
 		OpenGLARDisplay ARDisplay = new OpenGLARDisplay(outputBuffer);
 
 		pipeline.start();
@@ -67,7 +68,22 @@ public class ARBootstrapper {
 		pl("ORB.FAST_SCORE: " + ORB.FAST_SCORE);
 		pl("ORB.HARRIS_SCORE: " + ORB.HARRIS_SCORE);
 
-		homogeneousExample();
+		// discover type of descriptor mat
+		MockPointData mock = new MockPointData();
+		ImageData imgData = mock.getImageData(0);
+
+		// print descriptors
+		byte[] buffer = new byte[imgData.getDescriptors().rows() * 32];
+		imgData.getDescriptors().get(0, 0, buffer);
+		for (int i = 0; i < imgData.getDescriptors().rows(); i++) {
+			p("[ ");
+			for (int j = 0; j < 32; j++) {
+				p(buffer[i * 32 + j]);
+				p(j < 31 ? ", " : "");
+
+			}
+			pl(" ]");
+		}
 
 	}
 

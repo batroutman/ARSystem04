@@ -1,28 +1,34 @@
 package ARSystem04;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.joml.Vector3f;
+import org.opencv.core.CvType;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Point;
 
 import Jama.Matrix;
 import runtimevars.CameraIntrinsics;
 import runtimevars.Parameters;
+import types.ImageData;
 
 public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
 	protected long MAX_FRAMES = 400;
-	protected int NUM_POINTS = 500;
+	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
 	protected Matrix K = new Matrix(3, 3);
 
 	// Starting pose parameters
 	// NOTE: translations should be negative (-C)
-	protected Vector3f initialTranslation = new Vector3f(0f, 0f, -2f);
+	protected Vector3f initialTranslation = new Vector3f(0f, 0f, 0f);
 	protected double initialRotX = 0.0;
 	protected double initialRotY = 0.0;
 	protected double initialRotZ = 0.0;
@@ -37,7 +43,7 @@ public class MockPointData {
 //	protected double rotZ = -0.000;
 	protected Vector3f translationVelocity = new Vector3f(-0.02f, 0.00f, 0.00f);
 	protected double rotX = 0.000;
-	protected double rotY = 0.005;
+	protected double rotY = 0.004;
 	protected double rotZ = 0.000;
 
 	// List of homogeneous column vectors (4x1) corresponding to world
@@ -77,12 +83,12 @@ public class MockPointData {
 //		double X_SPAWN_MIN = -30;
 //		double X_SPAWN_MAX = 30;
 
-		double Z_SPAWN_MIN = 1;
-		double Z_SPAWN_MAX = 2;
-		double Y_SPAWN_MIN = -1;
-		double Y_SPAWN_MAX = 1;
-		double X_SPAWN_MIN = -1;
-		double X_SPAWN_MAX = 1;
+		double Z_SPAWN_MIN = -10;
+		double Z_SPAWN_MAX = 10;
+		double Y_SPAWN_MIN = -10;
+		double Y_SPAWN_MAX = 10;
+		double X_SPAWN_MIN = -10;
+		double X_SPAWN_MAX = 10;
 
 		double Z_RANGE = Z_SPAWN_MAX - Z_SPAWN_MIN;
 		double Y_RANGE = Y_SPAWN_MAX - Y_SPAWN_MIN;
@@ -220,6 +226,66 @@ public class MockPointData {
 		}
 
 		return buffer;
+	}
+
+	public ImageData getImageData(long frameNum) {
+
+		ImageData imgData = new ImageData();
+
+		// for every 3D point, project it onto the camera to get a keypoint and an index
+		// (which will be converted into a descriptor
+		List<Integer> indices = new ArrayList<Integer>();
+		List<KeyPoint> keypoints = new ArrayList<KeyPoint>();
+		for (int i = 0; i < this.worldCoordinates.size(); i++) {
+
+			Matrix projCoord = this.K.times(this.getR(frameNum).times(this.getIC(frameNum)).getMatrix(0, 2, 0, 3))
+					.times(this.worldCoordinates.get(i));
+
+			// if behind image, skip
+			if (projCoord.get(2, 0) < 0) {
+				continue;
+			}
+			projCoord = projCoord.times(1 / projCoord.get(2, 0));
+			int x = (int) projCoord.get(0, 0);
+			int y = (int) projCoord.get(1, 0);
+
+			// if the point is within bounds of the image, construct keypoint and record
+			// index
+			if (x >= 0 && y >= 0 && x < this.WIDTH && y < this.HEIGHT) {
+				Point pt = new Point(x, y);
+				KeyPoint kp = new KeyPoint();
+				kp.pt = pt;
+				keypoints.add(kp);
+				indices.add(i);
+			}
+
+		}
+
+		// set keypoint mat
+		MatOfKeyPoint keypointMat = new MatOfKeyPoint();
+		keypointMat.fromList(keypoints);
+		imgData.setKeypoints(keypointMat);
+
+		// get and set descriptors
+		imgData.setDescriptors(this.generateDescriptors(indices));
+
+		return imgData;
+
+	}
+
+	public Mat generateDescriptors(List<Integer> indices) {
+		Mat descriptors = new Mat(indices.size(), 32, CvType.CV_8U);
+		byte[] buffer = new byte[indices.size() * 32];
+		for (int i = 0; i < indices.size(); i++) {
+			int index = indices.get(i);
+			for (int j = 0; j < 32; j++) {
+				byte result = (byte) (index - 255 > 0 ? 255 : index);
+				index = index - 255 < 0 ? 0 : index - 255;
+				buffer[i * 32 + j] = result;
+			}
+		}
+		descriptors.put(0, 0, buffer);
+		return descriptors;
 	}
 
 	public ArrayList<Matrix> getWorldCoordinates() {

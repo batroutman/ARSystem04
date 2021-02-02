@@ -17,8 +17,8 @@ import toolbox.Utils;
 
 public class ImageData {
 
-	protected static ORB orb = ORB.create(1000, 2, 3, 31, 0, 2, ORB.FAST_SCORE, 31, 20); // optimized for speed
-//	protected static ORB orb = ORB.create(500, 1.2f, 8, 31, 0, 2, ORB.FAST_SCORE, 31, 20); // default
+//	protected static ORB orb = ORB.create(1000, 2, 3, 31, 0, 2, ORB.FAST_SCORE, 31, 20); // optimized for speed
+	protected static ORB orb = ORB.create(1000, 1.2f, 8, 31, 0, 2, ORB.FAST_SCORE, 31, 20); // default
 
 	protected List<Mat> masks = new ArrayList<Mat>();
 

@@ -16,7 +16,8 @@ import types.Correspondence2D2D;
 public class ORBMatcher {
 
 	static DescriptorMatcher matcher = BFMatcher.create(Core.NORM_HAMMING, true);
-	static int MATCH_THRESHOLD = 20;
+	static int MATCH_THRESHOLD = 0; // mock
+//	static int MATCH_THRESHOLD = 15; // real
 
 	public ORBMatcher() {
 		this.init();

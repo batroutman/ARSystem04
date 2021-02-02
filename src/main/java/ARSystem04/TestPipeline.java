@@ -178,7 +178,7 @@ public class TestPipeline extends PoseEstimator {
 				int targetFrametime = 30;
 				long now = System.currentTimeMillis();
 				long sleepTime = targetFrametime - (now - start) < 0 ? 0 : targetFrametime - (now - start);
-				Thread.sleep(sleepTime);
+				Thread.sleep(100);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

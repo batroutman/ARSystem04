@@ -43,8 +43,8 @@ public class Photogrammetry {
 		points1Mat.fromList(points1);
 
 		long start = System.currentTimeMillis();
-		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_7POINT);
-//		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_RANSAC, 3, 0.99, 200);
+//		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_7POINT);
+		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_RANSAC, 2, 0.99, 500);
 		long end = System.currentTimeMillis();
 		Utils.pl("Fundamental matrix estimation time: " + (end - start) + "ms");
 
@@ -199,7 +199,7 @@ public class Photogrammetry {
 
 		Mat inliers = new Mat();
 		Calib3d.solvePnPRansac(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, useInitialGuess,
-				100, 5, 0.99, inliers);
+				100, 1, 0.99, inliers);
 
 		Utils.pl("Initial num of object points: " + objectPoints.rows());
 		Utils.pl("Num inliers: " + inliers.rows());
