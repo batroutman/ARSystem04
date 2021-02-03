@@ -20,7 +20,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 400;
+	protected long MAX_FRAMES = 500;
 	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
@@ -41,7 +41,7 @@ public class MockPointData {
 //	protected double rotX = 0.000;
 //	protected double rotY = -0.02;
 //	protected double rotZ = -0.000;
-	protected Vector3f translationVelocity = new Vector3f(-0.02f, 0.00f, 0.00f);
+	protected Vector3f translationVelocity = new Vector3f(-0.02f, 0.00f, -0.00f);
 	protected double rotX = 0.000;
 	protected double rotY = 0.004;
 	protected double rotZ = 0.000;

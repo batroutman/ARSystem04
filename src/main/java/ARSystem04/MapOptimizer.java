@@ -216,7 +216,7 @@ public class MapOptimizer {
 				worldToCameraGL.T.y = cameras.get(i).getTy();
 				worldToCameraGL.T.z = cameras.get(i).getTz();
 				scene.setCamera(i, true, camera);
-				scene.setView(i, cameras.get(i).isFixed(), worldToCameraGL);
+				scene.setView(i, i == 0 ? true : false, worldToCameraGL);
 				scene.connectViewToCamera(i, i);
 			}
 
@@ -276,7 +276,7 @@ public class MapOptimizer {
 		BundleAdjustment<SceneStructureMetric> bundleAdjustment = FactoryMultiView.bundleSparseMetric(configSBA);
 
 		// debug
-		bundleAdjustment.setVerbose(System.out, 0);
+//		bundleAdjustment.setVerbose(System.out, 0);
 
 		// Specifies convergence criteria
 		bundleAdjustment.configure(1e-12, 1e-12, maxIterations);

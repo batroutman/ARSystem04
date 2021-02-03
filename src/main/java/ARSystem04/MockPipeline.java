@@ -67,6 +67,8 @@ public class MockPipeline extends PoseEstimator {
 				continue;
 			}
 
+			Utils.pl("================  FRAME " + this.frameNum + " ================");
+
 			// processing the image and extracting features
 			ImageData processedImage = this.mock.getImageData(this.frameNum);
 
@@ -101,7 +103,9 @@ public class MockPipeline extends PoseEstimator {
 						correspondenceMapPoints, correspondences, 10);
 
 				// if poses are far enough away, triangulate untriangulated points
-				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1
+				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
+						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
+				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 0.1
 						&& untriangulatedCorrespondences.size() > 0) {
 
 					Utils.pl("Triangulating map points: " + untriangulatedMapPoints.size());
@@ -114,7 +118,9 @@ public class MockPipeline extends PoseEstimator {
 				}
 
 				// if starting to lose tracking, generate new keyframe
-				if (numMatches < 30) { // this needs to be tuned when moving back to true pipeline
+				if (numMatches < processedImage.getKeypoints().rows() * 0.5) { // this needs to be tuned
+																				// when moving back to
+																				// true pipeline
 					Utils.pl("registering  new keyframe");
 					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
 							mapPointPerDescriptor);
@@ -126,6 +132,11 @@ public class MockPipeline extends PoseEstimator {
 			if (correspondences == null) {
 				correspondences = new ArrayList<Correspondence2D2D>();
 			}
+
+			Utils.pl("estimated: ");
+			pose.getHomogeneousMatrix().print(15, 5);
+			Utils.pl("ground truth: ");
+			this.mock.getR(this.frameNum).times(this.mock.getIC(this.frameNum)).print(15, 5);
 
 			// pipeline output
 			PipelineOutput po = new PipelineOutput();
@@ -161,7 +172,7 @@ public class MockPipeline extends PoseEstimator {
 
 		// the sum of average reprojection errors over which the triangulation will be
 		// discarded
-		double AVG_THRESHOLD = 20;
+		double AVG_THRESHOLD = 30;
 
 		// get point triangulations
 		List<Point3D> newPoints = new ArrayList<Point3D>();

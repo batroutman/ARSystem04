@@ -28,7 +28,9 @@ public class Map {
 	public Keyframe registerInitialKeyframe(ImageData imageData) {
 		synchronized (this) {
 			Keyframe keyframe = new Keyframe();
-			keyframe.setPose(new Pose());
+			Pose pose = new Pose();
+			pose.setFixed(true);
+			keyframe.setPose(pose);
 			keyframe.setKeypoints(imageData.getKeypoints());
 			keyframe.setDescriptors(imageData.getDescriptors());
 			for (int i = 0; i < keyframe.getDescriptors().rows(); i++) {

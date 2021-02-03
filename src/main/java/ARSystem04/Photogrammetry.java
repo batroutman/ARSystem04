@@ -205,7 +205,7 @@ public class Photogrammetry {
 		Utils.pl("Num inliers: " + inliers.rows());
 
 		// if theres enough inliers, refine the estimate
-		if (inliers.rows() > 10 && false) {
+		if (inliers.rows() > 10 && true) {
 			// load inliers
 			List<Point3> objectPointInliers = new ArrayList<Point3>();
 			List<Point> imagePointInliers = new ArrayList<Point>();
