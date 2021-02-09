@@ -20,7 +20,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 250;
+	protected long MAX_FRAMES = 700;
 	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
@@ -381,9 +381,26 @@ public class MockPointData {
 		imgData.setKeypoints(keypointMat);
 
 		// get and set descriptors
+		this.corruptIndices(indices, 0.01);
 		imgData.setDescriptors(this.generateDescriptors(indices));
 
 		return imgData;
+
+	}
+
+	// given a small corruption rate (about 0.05 or 0.1), randomly add 1 to the
+	// index values at that rate
+	// this is to simulate incorrect matches/outliers
+	public void corruptIndices(List<Integer> indices, double corruptionRate) {
+
+		Random rand = new Random(this.SEED);
+
+		for (int i = 0; i < indices.size(); i++) {
+			double roll = rand.nextDouble();
+			if (roll < corruptionRate) {
+				indices.set(i, indices.get(i) + 1);
+			}
+		}
 
 	}
 
