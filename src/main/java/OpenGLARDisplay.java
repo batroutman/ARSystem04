@@ -13,10 +13,12 @@ import org.lwjgl.opengl.GL30;
 import org.opencv.core.KeyPoint;
 
 import ARSystem04.Map;
+import Jama.Matrix;
 import buffers.Buffer;
 import entities.Camera;
 import entities.Entity;
 import gui.GUIComponents;
+import gui.InputHandler;
 import models.RawModel;
 import models.TexturedModel;
 import renderEngine.Loader;
@@ -37,6 +39,7 @@ public class OpenGLARDisplay {
 	Renderer renderer;
 	Camera camera;
 	Camera mapCamera;
+	Pose mapTransformation = new Pose();
 	ArrayList<Entity> entities = new ArrayList<Entity>();
 	StaticShader cameraShader;
 	Entity rawFrameEntity;
@@ -54,6 +57,9 @@ public class OpenGLARDisplay {
 	// legui
 	GUIComponents gui = new GUIComponents();
 
+	// input handler
+	InputHandler inputHandler = new InputHandler();
+
 	public OpenGLARDisplay() {
 		this.initOpenGL();
 	}
@@ -65,8 +71,13 @@ public class OpenGLARDisplay {
 
 	public void initOpenGL() {
 
+		// init map transformation
+		this.mapTransformation.setCz(-2);
+		this.mapTransformation.setCy(-0.5);
+
 		// initialize
 		this.gui.initGUI();
+		this.inputHandler.setWindow(this.gui.window);
 
 		this.loader = new Loader();
 		this.cameraShader = new StaticShader(StaticShader.VERTEX_FILE, StaticShader.FRAGMENT_FILE);
@@ -236,10 +247,14 @@ public class OpenGLARDisplay {
 		bgEntity.getModel().getTexture().setID(textureID);
 	}
 
-	public void setCameraPose(double r00, double r01, double r02, double r10, double r11, double r12, double r20,
-			double r21, double r22, double tx, double ty, double tz) {
-		this.camera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty, tz);
-		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty + 0.5, tz + 2);
+	public void setCameraPose(Pose pose) {
+		this.camera.setMatrix(pose.getR00(), pose.getR01(), pose.getR02(), pose.getR10(), pose.getR11(), pose.getR12(),
+				pose.getR20(), pose.getR21(), pose.getR22(), pose.getTx(), pose.getTy(), pose.getTz());
+		Matrix mapPos = this.mapTransformation.getHomogeneousMatrix().times(pose.getHomogeneousMatrix());
+		this.mapCamera.setMatrix(mapPos.get(0, 0), mapPos.get(0, 1), mapPos.get(0, 2), mapPos.get(1, 0),
+				mapPos.get(1, 1), mapPos.get(1, 2), mapPos.get(2, 0), mapPos.get(2, 1), mapPos.get(2, 2),
+				mapPos.get(0, 3), mapPos.get(1, 3), mapPos.get(2, 3));
+//		this.mapCamera.setMatrix(r00, r01, r02, r10, r11, r12, r20, r21, r22, tx, ty + 0.5, tz + 2);
 	}
 
 	public void detectChanges() {
@@ -253,9 +268,7 @@ public class OpenGLARDisplay {
 			return;
 		}
 
-		this.setCameraPose(output.pose.getR00(), output.pose.getR01(), output.pose.getR02(), output.pose.getR10(),
-				output.pose.getR11(), output.pose.getR12(), output.pose.getR20(), output.pose.getR21(),
-				output.pose.getR22(), output.pose.getTx(), output.pose.getTy(), output.pose.getTz());
+		this.setCameraPose(output.pose);
 
 		if (output.rawFrameBuffer != null) {
 			this.setFrameToTexture(output.rawFrameBuffer, this.rawFrameEntity, true);
@@ -285,6 +298,7 @@ public class OpenGLARDisplay {
 
 		while (this.gui.isRunning()) {
 			this.detectChanges();
+			this.inputHandler.moveMapCamera(this.mapTransformation);
 			this.updateDisplay(context);
 		}
 

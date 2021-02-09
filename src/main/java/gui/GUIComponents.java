@@ -37,7 +37,7 @@ import runtimevars.Parameters;
 
 public class GUIComponents {
 
-	private long window;
+	public long window;
 	private Frame leguiframe;
 	private DefaultInitializer initializer;
 	private volatile boolean running = false;

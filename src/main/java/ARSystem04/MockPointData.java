@@ -20,7 +20,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 700;
+	protected long MAX_FRAMES = 250;
 	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
