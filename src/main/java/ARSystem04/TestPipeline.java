@@ -35,7 +35,12 @@ public class TestPipeline extends PoseEstimator {
 	Thread poseEstimationThread = new Thread() {
 		@Override
 		public void run() {
-			mainloop();
+			try {
+				mainloop();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	};
 
@@ -72,7 +77,7 @@ public class TestPipeline extends PoseEstimator {
 
 	}
 
-	protected void mainloop() {
+	protected void mainloop() throws Exception {
 		boolean keepGoing = true;
 		while (keepGoing) {
 
@@ -94,9 +99,10 @@ public class TestPipeline extends PoseEstimator {
 //			processedImage.detectAndComputeHomogeneousORB();
 
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+			List<Correspondence2D2D> prunedCorrespondences = new ArrayList<Correspondence2D2D>();
 			Pose pose = new Pose();
 			List<MapPoint> mapPointPerDescriptor = new ArrayList<MapPoint>();
-			List<MapPoint> correspondenceMapPoints = new ArrayList<MapPoint>();
+			List<MapPoint> prunedCorrespondenceMapPoints = new ArrayList<MapPoint>();
 			List<Correspondence2D2D> untriangulatedCorrespondences = new ArrayList<Correspondence2D2D>();
 			List<MapPoint> untriangulatedMapPoints = new ArrayList<MapPoint>();
 
@@ -116,12 +122,12 @@ public class TestPipeline extends PoseEstimator {
 
 				// perform routine PnP pose estimation
 				int numMatches = tracker.trackMovement(processedImage.getKeypoints(), processedImage.getDescriptors(),
-						correspondences, correspondenceMapPoints, mapPointPerDescriptor, untriangulatedCorrespondences,
-						untriangulatedMapPoints, pose);
+						correspondences, prunedCorrespondences, prunedCorrespondenceMapPoints, mapPointPerDescriptor,
+						untriangulatedCorrespondences, untriangulatedMapPoints, pose);
 
 				// pair-wise BA
 				this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
-						correspondenceMapPoints, correspondences, 10);
+						prunedCorrespondenceMapPoints, prunedCorrespondences, 10);
 
 				// if poses are far enough away, triangulate untriangulated points
 				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1
@@ -132,7 +138,7 @@ public class TestPipeline extends PoseEstimator {
 
 					// pair-wise BA
 					this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
-							correspondenceMapPoints, correspondences, 10);
+							prunedCorrespondenceMapPoints, prunedCorrespondences, 10);
 
 				}
 

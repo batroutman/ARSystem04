@@ -38,7 +38,7 @@ public class MapOptimizer {
 		Utils.pl("Starting map optimization loop...");
 	}
 
-	public void fullBundleAdjustment(int iterations) {
+	public void fullBundleAdjustment(int iterations) throws Exception {
 
 		SceneStructureMetric scene = new SceneStructureMetric(false);
 		SceneObservations observations = new SceneObservations();
@@ -168,7 +168,7 @@ public class MapOptimizer {
 
 	// perform bundle adjustment for the current pose and the current keyframe pose
 	public void pairBundleAdjustment(Pose currentPose, Pose keyframePose, List<MapPoint> matchedMapPoints,
-			List<Correspondence2D2D> correspondences, int iterations) {
+			List<Correspondence2D2D> correspondences, int iterations) throws Exception {
 
 		SceneStructureMetric scene = new SceneStructureMetric(false);
 		SceneObservations observations = new SceneObservations();
@@ -265,7 +265,8 @@ public class MapOptimizer {
 
 	}
 
-	public void bundleAdjustScene(SceneStructureMetric scene, SceneObservations observations, int maxIterations) {
+	public void bundleAdjustScene(SceneStructureMetric scene, SceneObservations observations, int maxIterations)
+			throws Exception {
 
 		ConfigLevenbergMarquardt configLM = new ConfigLevenbergMarquardt();
 		configLM.dampeningInitial = 1e-3;
@@ -301,7 +302,7 @@ public class MapOptimizer {
 			bundleScale.undoScale(scene, observations);
 
 			Utils.pl("****************************************************************\n\n\n\n");
-
+			throw new Exception();
 		}
 
 		// Print out how much it improved the model

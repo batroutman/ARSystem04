@@ -34,7 +34,12 @@ public class MockPipeline extends PoseEstimator {
 	Thread poseEstimationThread = new Thread() {
 		@Override
 		public void run() {
-			mainloop();
+			try {
+				mainloop();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	};
 
@@ -57,7 +62,7 @@ public class MockPipeline extends PoseEstimator {
 		this.poseEstimationThread.interrupt();
 	}
 
-	public void mainloop() {
+	public void mainloop() throws Exception {
 		boolean keepGoing = true;
 		while (keepGoing) {
 
@@ -73,9 +78,10 @@ public class MockPipeline extends PoseEstimator {
 			ImageData processedImage = this.mock.getImageData(this.frameNum);
 
 			List<Correspondence2D2D> correspondences = new ArrayList<Correspondence2D2D>();
+			List<Correspondence2D2D> prunedCorrespondences = new ArrayList<Correspondence2D2D>();
 			Pose pose = new Pose();
 			List<MapPoint> mapPointPerDescriptor = new ArrayList<MapPoint>();
-			List<MapPoint> correspondenceMapPoints = new ArrayList<MapPoint>();
+			List<MapPoint> prunedCorrespondenceMapPoints = new ArrayList<MapPoint>();
 			List<Correspondence2D2D> untriangulatedCorrespondences = new ArrayList<Correspondence2D2D>();
 			List<MapPoint> untriangulatedMapPoints = new ArrayList<MapPoint>();
 
@@ -95,12 +101,13 @@ public class MockPipeline extends PoseEstimator {
 
 				// perform routine PnP pose estimation
 				int numMatches = tracker.trackMovement(processedImage.getKeypoints(), processedImage.getDescriptors(),
-						correspondences, correspondenceMapPoints, mapPointPerDescriptor, untriangulatedCorrespondences,
-						untriangulatedMapPoints, pose);
+						correspondences, prunedCorrespondences, prunedCorrespondenceMapPoints, mapPointPerDescriptor,
+						untriangulatedCorrespondences, untriangulatedMapPoints, pose);
 
 				// pair-wise BA
+				Utils.pl("pair BA");
 				this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
-						correspondenceMapPoints, correspondences, 1);
+						prunedCorrespondenceMapPoints, prunedCorrespondences, 1);
 
 				// if poses are far enough away, triangulate untriangulated points
 				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
@@ -112,8 +119,9 @@ public class MockPipeline extends PoseEstimator {
 					this.triangulateUntrackedMapPoints(pose, untriangulatedCorrespondences, untriangulatedMapPoints);
 
 					// pair-wise BA
+					Utils.pl("pair BA (triangulate)");
 					this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
-							correspondenceMapPoints, correspondences, 1);
+							prunedCorrespondenceMapPoints, prunedCorrespondences, 1);
 
 				}
 
@@ -124,6 +132,7 @@ public class MockPipeline extends PoseEstimator {
 					Utils.pl("registering  new keyframe");
 					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
 							mapPointPerDescriptor);
+					Utils.pl("full BA");
 					this.mapOptimizer.fullBundleAdjustment(10);
 				}
 

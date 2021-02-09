@@ -189,7 +189,13 @@ public class Photogrammetry {
 	}
 
 	public static Matrix OpenCVPnP(List<Point3> point3s, List<Point> points, Mat rvec, Mat tvec,
-			boolean useInitialGuess) {
+			List<Integer> inlierIndices) {
+
+		if (inlierIndices == null) {
+			inlierIndices = new ArrayList<Integer>();
+		}
+
+		inlierIndices.clear();
 
 		MatOfPoint3f objectPoints = new MatOfPoint3f();
 		objectPoints.fromList(point3s);
@@ -198,8 +204,8 @@ public class Photogrammetry {
 		Mat cameraMatrix = CameraIntrinsics.getKMat();
 
 		Mat inliers = new Mat();
-		Calib3d.solvePnPRansac(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, useInitialGuess,
-				100, 10, 0.9, inliers);
+		Calib3d.solvePnPRansac(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, false, 100, 10,
+				0.9, inliers);
 
 		Utils.pl("Initial num of object points: " + objectPoints.rows());
 		Utils.pl("Num inliers: " + inliers.rows());
@@ -212,6 +218,7 @@ public class Photogrammetry {
 			int[] inlierBuffer = new int[inliers.rows()];
 			inliers.get(0, 0, inlierBuffer);
 			for (int i = 0; i < inlierBuffer.length; i++) {
+				inlierIndices.add(inlierBuffer[i]);
 				objectPointInliers.add(point3s.get(inlierBuffer[i]));
 				imagePointInliers.add(points.get(inlierBuffer[i]));
 			}

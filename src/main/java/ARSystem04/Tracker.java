@@ -28,20 +28,21 @@ public class Tracker {
 	}
 
 	public int trackMovement(MatOfKeyPoint keypoints, Mat descriptors, List<Correspondence2D2D> outCorrespondences,
-			List<MapPoint> outCorrespondenceMapPoints, List<MapPoint> outMapPointPerDescriptor,
-			List<Correspondence2D2D> outUntriangulatedCorrespondences, List<MapPoint> outUntriangulatedMapPoints,
-			Pose outPose) {
+			List<Correspondence2D2D> outPrunedCorrespondences, List<MapPoint> outPrunedCorrespondenceMapPoints,
+			List<MapPoint> outMapPointPerDescriptor, List<Correspondence2D2D> outUntriangulatedCorrespondences,
+			List<MapPoint> outUntriangulatedMapPoints, Pose outPose) {
 		return this.trackMovementFromKeyframe(this.map.getCurrentKeyframe(), keypoints, descriptors, outCorrespondences,
-				outCorrespondenceMapPoints, outMapPointPerDescriptor, outUntriangulatedCorrespondences,
-				outUntriangulatedMapPoints, outPose);
+				outPrunedCorrespondences, outPrunedCorrespondenceMapPoints, outMapPointPerDescriptor,
+				outUntriangulatedCorrespondences, outUntriangulatedMapPoints, outPose);
 	}
 
 	// does full frame feature matching, generates correspondences, gets PnP pose,
 	// and returns the number of matches
 	public int trackMovementFromKeyframe(Keyframe keyframe, MatOfKeyPoint keypoints, Mat descriptors,
-			List<Correspondence2D2D> outCorrespondences, List<MapPoint> outCorrespondenceMapPoints,
-			List<MapPoint> outMapPointPerDescriptor, List<Correspondence2D2D> outUntriangulatedCorrespondences,
-			List<MapPoint> outUntriangulatedMapPoints, Pose outPose) {
+			List<Correspondence2D2D> outCorrespondences, List<Correspondence2D2D> outPrunedCorrespondences,
+			List<MapPoint> outPrunedCorrespondenceMapPoints, List<MapPoint> outMapPointPerDescriptor,
+			List<Correspondence2D2D> outUntriangulatedCorrespondences, List<MapPoint> outUntriangulatedMapPoints,
+			Pose outPose) {
 
 		outCorrespondences.clear();
 		outMapPointPerDescriptor.clear();
@@ -76,7 +77,6 @@ public class Tracker {
 			// set map point in list
 			MapPoint mp = keyframe.getMapPoints().get(matches.get(i).trainIdx);
 			outMapPointPerDescriptor.set(matches.get(i).queryIdx, mp);
-			outCorrespondenceMapPoints.add(mp);
 
 			// if it is already triangulated, extract point data for PnP
 			if (mp.getPoint() == null) {
@@ -87,6 +87,9 @@ public class Tracker {
 
 			numTracked++;
 
+			outPrunedCorrespondences.add(c);
+			outPrunedCorrespondenceMapPoints.add(mp);
+
 			Point3 point3 = new Point3(mp.getPoint().getX(), mp.getPoint().getY(), mp.getPoint().getZ());
 			point3s.add(point3);
 			Point point = keypointList.get(matches.get(i).queryIdx).pt;
@@ -95,11 +98,31 @@ public class Tracker {
 		}
 		Utils.pl("numTracked = " + numTracked);
 
+		List<Integer> inlierIndices = new ArrayList<Integer>();
 		long start = System.currentTimeMillis();
-		Matrix E = Photogrammetry.OpenCVPnP(point3s, points, new Mat(), new Mat(), false);
+		Matrix E = Photogrammetry.OpenCVPnP(point3s, points, new Mat(), new Mat(), inlierIndices);
 		long end = System.currentTimeMillis();
 		Utils.pl("PnP time: " + (end - start) + "ms");
 		outPose.setPose(Utils.matrixToPose(E));
+
+		// prune outliers
+		int numPruned = 0;
+		for (int i = 0, j = 0; i < inlierIndices.size(); i++) {
+			Integer nextInlierIndex = inlierIndices.get(i);
+//			Utils.pl("inlier index: " + nextInlierIndex + ",   j: " + j + ",   j + numPruned: " + (j + numPruned));
+			if (nextInlierIndex == j + numPruned) {
+				// keep correspondence, go to next element in correspondences
+				j++;
+			} else {
+				// remove correspondence
+				numPruned++;
+				i--;
+				outPrunedCorrespondences.remove(j);
+				outPrunedCorrespondenceMapPoints.remove(j);
+			}
+		}
+
+		Utils.pl("pruned correspondences size: " + outPrunedCorrespondences.size());
 
 		return matches.size();
 
