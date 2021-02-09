@@ -20,7 +20,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 200;
+	protected long MAX_FRAMES = 700;
 	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
@@ -115,28 +115,28 @@ public class MockPointData {
 		this.worldCoordinates.clear();
 
 		// floor
-		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 0, 1, 5, 0, 1, 0, 20, 20, 20, 0.1));
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 0, 1, 5, 0, 1, 0, 20, 20, 20, 0.0)); // 0.1
 
 		// back wall
-		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 0, -9, 15, 0, 0, 1, 20, 20, 20, 0.05));
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 0, -9, 15, 0, 0, 1, 20, 20, 20, 0.00)); // 0.05
 
 		// right wall
-		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 10, -9, 5, 1, 0, 0, 20, 20, 20, 0.05));
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 10, -9, 5, 1, 0, 0, 20, 20, 20, 0.00)); // 0.05
 
 		// globe
-		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, 0, 0, 5, 1, 0.05));
+		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, 0, 0, 5, 1, 0.00)); // 0.05
 
 		// right painting
-		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 9.9, -1, 5, 1, 0, 0, 1, 2, 4, 0));
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 9.9, -1, 5, 1, 0, 0, 1, 2, 4, 0)); // 0
 
 		// back right cluster
-		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, 5, 0, -10, 1, 0.5));
+		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, 5, 0, -10, 1, 0.0)); // 0.5
 
 		// back floor mat
-		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, -10, 1, -5, 0, 1, 0, 5, 5, 5, 0.1));
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, -10, 1, -5, 0, 1, 0, 5, 5, 5, 0.0)); // 0.1
 
 		// back left cluster
-		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, -5, -2, -20, 5, 0.5));
+		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, -5, -2, -20, 5, 0.0)); // 0.5
 	}
 
 	public List<Matrix> getPointsInPlane(int seed, int numPoints, double x0, double y0, double z0, double normalX,
@@ -381,7 +381,7 @@ public class MockPointData {
 		imgData.setKeypoints(keypointMat);
 
 		// get and set descriptors
-		this.corruptIndices(indices, 0.01);
+		this.corruptIndices(indices, 0.00);
 		imgData.setDescriptors(this.generateDescriptors(indices));
 
 		return imgData;

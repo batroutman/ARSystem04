@@ -187,7 +187,7 @@ public class MockPipeline extends PoseEstimator {
 
 		// the sum of average reprojection errors over which the triangulation will be
 		// discarded
-		double AVG_THRESHOLD = 10;
+		double AVG_THRESHOLD = 5;
 
 		double INDIVIDUAL_THRESHOLD = 10;
 
@@ -264,8 +264,7 @@ public class MockPipeline extends PoseEstimator {
 		// set each point in the map
 		for (int i = 0; i < newPoints.size(); i++) {
 
-			// do not triangulate outliers (points with error above 1 standard deviation of
-			// the mean)
+			// do not triangulate outliers
 			if (currentErrors.get(i) > INDIVIDUAL_THRESHOLD || keyframeErrors.get(i) > INDIVIDUAL_THRESHOLD) {
 				continue;
 			}
