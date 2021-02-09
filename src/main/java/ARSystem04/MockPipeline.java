@@ -118,7 +118,7 @@ public class MockPipeline extends PoseEstimator {
 				}
 
 				// if starting to lose tracking, generate new keyframe
-				if (numMatches < processedImage.getKeypoints().rows() * 0.5) { // this needs to be tuned
+				if (numMatches < processedImage.getKeypoints().rows() * 0.75) { // this needs to be tuned
 																				// when moving back to
 																				// true pipeline
 					Utils.pl("registering  new keyframe");
@@ -170,9 +170,15 @@ public class MockPipeline extends PoseEstimator {
 	public void triangulateUntrackedMapPoints(Pose currentPose, List<Correspondence2D2D> untriangulatedCorrespondences,
 			List<MapPoint> untriangulatedMapPoints) {
 
+		Utils.pl("*******************************************************************");
+		Utils.pl("**********************  TRIANGULATING...   ************************");
+		Utils.pl("*******************************************************************");
+
 		// the sum of average reprojection errors over which the triangulation will be
 		// discarded
 		double AVG_THRESHOLD = 30;
+
+		double INDIVIDUAL_THRESHOLD = 10;
 
 		// get point triangulations
 		List<Point3D> newPoints = new ArrayList<Point3D>();
@@ -207,6 +213,9 @@ public class MockPipeline extends PoseEstimator {
 			double errKeyframe = Math
 					.sqrt(Math.pow(projKeyframe.get(0, 0) - untriangulatedCorrespondences.get(i).getX0(), 2)
 							+ Math.pow(projKeyframe.get(1, 0) - untriangulatedCorrespondences.get(i).getY0(), 2));
+
+			Utils.pl("errCurrent: " + errCurrent);
+			Utils.pl("errKeyframe: " + errKeyframe);
 
 			avgErrCurrent += errCurrent;
 			avgErrKeyframe += errKeyframe;
@@ -246,8 +255,7 @@ public class MockPipeline extends PoseEstimator {
 
 			// do not triangulate outliers (points with error above 1 standard deviation of
 			// the mean)
-			if (currentErrors.get(i) > stdDevCurrent + avgErrCurrent
-					|| keyframeErrors.get(i) > stdDevKeyframe + avgErrKeyframe) {
+			if (currentErrors.get(i) > INDIVIDUAL_THRESHOLD || keyframeErrors.get(i) > INDIVIDUAL_THRESHOLD) {
 				continue;
 			}
 

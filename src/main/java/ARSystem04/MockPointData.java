@@ -20,7 +20,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 500;
+	protected long MAX_FRAMES = 300;
 	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
@@ -83,10 +83,10 @@ public class MockPointData {
 //		double X_SPAWN_MIN = -30;
 //		double X_SPAWN_MAX = 30;
 
-		double Z_SPAWN_MIN = -10;
-		double Z_SPAWN_MAX = 10;
-		double Y_SPAWN_MIN = -10;
-		double Y_SPAWN_MAX = 10;
+		double Z_SPAWN_MIN = 5;
+		double Z_SPAWN_MAX = 6;
+		double Y_SPAWN_MIN = -2;
+		double Y_SPAWN_MAX = 2;
 		double X_SPAWN_MIN = -10;
 		double X_SPAWN_MAX = 10;
 
@@ -106,6 +106,40 @@ public class MockPointData {
 		}
 		// System.out.println("true world coords:");
 		// System.out.println(output);
+
+	}
+
+	public List<Matrix> getPointsInPlane(int seed, int numPoints, double x0, double y0, double z0, double normalX,
+			double normalY, double normalZ, double xRange, double yRange, double zRange) {
+
+		List<Matrix> points = new ArrayList<Matrix>();
+
+		// calculate minimum values for each dimension
+		double xMin = x0 - xRange / 2;
+		double yMin = y0 - yRange / 2;
+		double zMin = z0 - zRange / 2;
+
+		Random rand = new Random(seed);
+
+		// generate points
+		for (int i = 0; i < numPoints; i++) {
+
+			double x = rand.nextDouble() * xRange + xMin;
+			double y = rand.nextDouble() * yRange + yMin;
+
+			// calulate z
+			double z = (-normalX * (x - x0) - normalY * (y - y0)) / normalZ + z0;
+
+			Matrix p = new Matrix(4, 1);
+			p.set(0, 0, x);
+			p.set(1, 0, y);
+			p.set(2, 0, z);
+			p.set(3, 0, 1);
+			points.add(p);
+
+		}
+
+		return points;
 
 	}
 

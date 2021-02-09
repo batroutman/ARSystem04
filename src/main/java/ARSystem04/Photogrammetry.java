@@ -161,12 +161,12 @@ public class Photogrammetry {
 
 	}
 
-	public static Matrix triangulate(Matrix E, Matrix pose, Correspondence2D2D c) {
+	public static Matrix triangulate(Matrix secondaryPose, Matrix primaryPose, Correspondence2D2D c) {
 
-		Matrix Pprime = E.times(pose);
-		Pprime = CameraIntrinsics.getK4x4().times(Pprime);
+//		Matrix Pprime = E.times(pose);
+		Matrix Pprime = CameraIntrinsics.getK4x4().times(secondaryPose);
 
-		Matrix P = CameraIntrinsics.getK4x4().times(pose);
+		Matrix P = CameraIntrinsics.getK4x4().times(primaryPose);
 
 		// compute A matrix for Ax = 0
 		Matrix row0 = P.getMatrix(2, 2, 0, 3).times(c.getX0()).minus(P.getMatrix(0, 0, 0, 3));
