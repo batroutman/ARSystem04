@@ -100,12 +100,12 @@ public class MockPipeline extends PoseEstimator {
 
 				// pair-wise BA
 				this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
-						correspondenceMapPoints, correspondences, 10);
+						correspondenceMapPoints, correspondences, 1);
 
 				// if poses are far enough away, triangulate untriangulated points
 				Utils.pl("pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()): "
 						+ pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()));
-				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 0.1
+				if (pose.getDistanceFrom(this.map.getCurrentKeyframe().getPose()) >= 1
 						&& untriangulatedCorrespondences.size() > 0) {
 
 					Utils.pl("Triangulating map points: " + untriangulatedMapPoints.size());
@@ -113,7 +113,7 @@ public class MockPipeline extends PoseEstimator {
 
 					// pair-wise BA
 					this.mapOptimizer.pairBundleAdjustment(pose, this.map.getCurrentKeyframe().getPose(),
-							correspondenceMapPoints, correspondences, 10);
+							correspondenceMapPoints, correspondences, 1);
 
 				}
 
@@ -155,6 +155,8 @@ public class MockPipeline extends PoseEstimator {
 
 			long end = System.currentTimeMillis();
 			po.fps = 1000 / (end - start + 1);
+			Utils.pl("frametime: " + (end - start) + "ms");
+			Utils.pl("framerate: " + po.fps);
 
 			try {
 				long sleepTime = (end - start) < this.targetFrametime ? this.targetFrametime - (end - start) : 0;
@@ -176,7 +178,7 @@ public class MockPipeline extends PoseEstimator {
 
 		// the sum of average reprojection errors over which the triangulation will be
 		// discarded
-		double AVG_THRESHOLD = 30;
+		double AVG_THRESHOLD = 10;
 
 		double INDIVIDUAL_THRESHOLD = 10;
 
@@ -214,8 +216,8 @@ public class MockPipeline extends PoseEstimator {
 					.sqrt(Math.pow(projKeyframe.get(0, 0) - untriangulatedCorrespondences.get(i).getX0(), 2)
 							+ Math.pow(projKeyframe.get(1, 0) - untriangulatedCorrespondences.get(i).getY0(), 2));
 
-			Utils.pl("errCurrent: " + errCurrent);
-			Utils.pl("errKeyframe: " + errKeyframe);
+//			Utils.pl("errCurrent: " + errCurrent);
+//			Utils.pl("errKeyframe: " + errKeyframe);
 
 			avgErrCurrent += errCurrent;
 			avgErrKeyframe += errKeyframe;

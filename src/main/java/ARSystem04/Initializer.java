@@ -29,7 +29,7 @@ public class Initializer {
 	public List<Correspondence2D2D> registerData(long frameNum, ImageData imageData) {
 		if (frameNum == 0) {
 			this.referenceData = imageData;
-		} else if (frameNum == 50) {
+		} else if (frameNum == 29) {
 			return this.initialize(imageData);
 		}
 		return ORBMatcher.matchDescriptors(this.referenceData.getKeypoints().toList(),

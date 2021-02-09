@@ -20,7 +20,7 @@ public class MockPointData {
 
 	protected int HEIGHT = Parameters.height;
 	protected int WIDTH = Parameters.width;
-	protected long MAX_FRAMES = 300;
+	protected long MAX_FRAMES = 700;
 	protected int NUM_POINTS = 1000;
 	protected int START_FRAME = 0;
 	protected int SEED = 1;
@@ -41,9 +41,9 @@ public class MockPointData {
 //	protected double rotX = 0.000;
 //	protected double rotY = -0.02;
 //	protected double rotZ = -0.000;
-	protected Vector3f translationVelocity = new Vector3f(-0.02f, 0.00f, -0.00f);
+	protected Vector3f translationVelocity = new Vector3f(-0.0333f, 0.00f, -0.00f);
 	protected double rotX = 0.000;
-	protected double rotY = 0.004;
+	protected double rotY = 0.00333;
 	protected double rotZ = 0.000;
 
 	// List of homogeneous column vectors (4x1) corresponding to world
@@ -107,10 +107,40 @@ public class MockPointData {
 		// System.out.println("true world coords:");
 		// System.out.println(output);
 
+		this.loadEnvironment1();
+
+	}
+
+	public void loadEnvironment1() {
+		this.worldCoordinates.clear();
+
+		// floor
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 0, 1, 5, 0, 1, 0, 20, 20, 20, 0.1));
+
+		// back wall
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 0, -9, 15, 0, 0, 1, 20, 20, 20, 0.05));
+
+		// right wall
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 10, -9, 5, 1, 0, 0, 20, 20, 20, 0.05));
+
+		// globe
+		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, 0, 0, 5, 1, 0.05));
+
+		// right painting
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, 9.9, -1, 5, 1, 0, 0, 1, 2, 4, 0));
+
+		// back right cluster
+		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, 5, 0, -10, 1, 0.5));
+
+		// back floor mat
+		this.worldCoordinates.addAll(this.getPointsInPlane(this.SEED, 100, -10, 1, -5, 0, 1, 0, 5, 5, 5, 0.1));
+
+		// back left cluster
+		this.worldCoordinates.addAll(this.getPointsInSphere(this.SEED, 100, -5, -2, -20, 5, 0.5));
 	}
 
 	public List<Matrix> getPointsInPlane(int seed, int numPoints, double x0, double y0, double z0, double normalX,
-			double normalY, double normalZ, double xRange, double yRange, double zRange) {
+			double normalY, double normalZ, double xRange, double yRange, double zRange, double noiseRange) {
 
 		List<Matrix> points = new ArrayList<Matrix>();
 
@@ -126,9 +156,24 @@ public class MockPointData {
 
 			double x = rand.nextDouble() * xRange + xMin;
 			double y = rand.nextDouble() * yRange + yMin;
+			double z = rand.nextDouble() * zRange + zMin;
 
-			// calulate z
-			double z = (-normalX * (x - x0) - normalY * (y - y0)) / normalZ + z0;
+			// correct one of the coordinates
+			if (normalZ != 0) {
+				z = (-normalX * (x - x0) - normalY * (y - y0)) / normalZ + z0;
+			} else if (normalX != 0) {
+				x = (-normalZ * (z - z0) - normalY * (y - y0)) / normalX + x0;
+			} else if (normalY != 0) {
+				y = (-normalZ * (z - z0) - normalX * (x - x0)) / normalY + y0;
+			}
+
+			double noiseX = rand.nextDouble() * noiseRange - noiseRange / 2;
+			double noiseY = rand.nextDouble() * noiseRange - noiseRange / 2;
+			double noiseZ = rand.nextDouble() * noiseRange - noiseRange / 2;
+
+			x += noiseX;
+			y += noiseY;
+			z += noiseZ;
 
 			Matrix p = new Matrix(4, 1);
 			p.set(0, 0, x);
@@ -137,6 +182,41 @@ public class MockPointData {
 			p.set(3, 0, 1);
 			points.add(p);
 
+		}
+
+		return points;
+
+	}
+
+	public List<Matrix> getPointsInSphere(int seed, int numPoints, double x0, double y0, double z0, double radius,
+			double noiseRange) {
+
+		List<Matrix> points = new ArrayList<Matrix>();
+
+		Random rand = new Random(seed);
+
+		for (int i = 0; i < numPoints; i++) {
+			double theta = rand.nextDouble() * 2 * Math.PI;
+			double phi = rand.nextDouble() * Math.PI;
+
+			double x = radius * Math.cos(theta) * Math.sin(phi) + x0;
+			double y = radius * Math.sin(theta) * Math.sin(phi) + y0;
+			double z = radius * Math.cos(phi) + z0;
+
+			double noiseX = rand.nextDouble() * noiseRange - noiseRange / 2;
+			double noiseY = rand.nextDouble() * noiseRange - noiseRange / 2;
+			double noiseZ = rand.nextDouble() * noiseRange - noiseRange / 2;
+
+			x += noiseX;
+			y += noiseY;
+			z += noiseZ;
+
+			Matrix p = new Matrix(4, 1);
+			p.set(0, 0, x);
+			p.set(1, 0, y);
+			p.set(2, 0, z);
+			p.set(3, 0, 1);
+			points.add(p);
 		}
 
 		return points;

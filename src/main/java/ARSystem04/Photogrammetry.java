@@ -199,7 +199,7 @@ public class Photogrammetry {
 
 		Mat inliers = new Mat();
 		Calib3d.solvePnPRansac(objectPoints, imagePoints, cameraMatrix, new MatOfDouble(), rvec, tvec, useInitialGuess,
-				100, 1, 0.99, inliers);
+				100, 10, 0.9, inliers);
 
 		Utils.pl("Initial num of object points: " + objectPoints.rows());
 		Utils.pl("Num inliers: " + inliers.rows());
