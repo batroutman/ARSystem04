@@ -116,6 +116,12 @@ public class MockPipeline extends PoseEstimator {
 						&& untriangulatedCorrespondences.size() > 0) {
 
 					Utils.pl("Triangulating map points: " + untriangulatedMapPoints.size());
+
+					// prune correspondences with epipolar search
+					Photogrammetry.epipolarPrune(untriangulatedCorrespondences, untriangulatedMapPoints, pose,
+							this.map.getCurrentKeyframe().getPose());
+
+					// triangulate remaining correspondences
 					this.triangulateUntrackedMapPoints(pose, untriangulatedCorrespondences, untriangulatedMapPoints);
 
 					// pair-wise BA
@@ -129,7 +135,7 @@ public class MockPipeline extends PoseEstimator {
 				if (numMatches < processedImage.getKeypoints().rows() * 0.75) { // this needs to be tuned
 																				// when moving back to
 																				// true pipeline
-					Utils.pl("registering  new keyframe");
+					Utils.pl("--- registering  new keyframe ---");
 					this.map.registerNewKeyframe(pose, processedImage.getKeypoints(), processedImage.getDescriptors(),
 							mapPointPerDescriptor);
 					Utils.pl("full BA");

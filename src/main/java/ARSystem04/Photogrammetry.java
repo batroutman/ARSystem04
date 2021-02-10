@@ -1,6 +1,7 @@
 package ARSystem04;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -44,7 +45,7 @@ public class Photogrammetry {
 
 		long start = System.currentTimeMillis();
 //		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_7POINT);
-		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_RANSAC, 2, 0.99, 500);
+		Mat fundamentalMatrix = Calib3d.findFundamentalMat(points0Mat, points1Mat, Calib3d.FM_RANSAC, 1, 0.99, 500);
 		long end = System.currentTimeMillis();
 		Utils.pl("Fundamental matrix estimation time: " + (end - start) + "ms");
 
@@ -252,6 +253,80 @@ public class Photogrammetry {
 		E.set(2, 3, tBuffer[2]);
 
 		return E;
+	}
+
+	public static void epipolarPrune(List<Correspondence2D2D> correspondences, Pose pose1, Pose pose0) {
+		List<MapPoint> dummyMapPoints = new ArrayList<MapPoint>(correspondences.size());
+		for (int i = 0; i < correspondences.size(); i++) {
+			dummyMapPoints.add(null);
+		}
+		epipolarPrune(correspondences, dummyMapPoints, pose1, pose0);
+	}
+
+	// using epipolar search, return a list of correspondences that satisfies
+	// epipolar constraint
+	public static void epipolarPrune(List<Correspondence2D2D> correspondences, List<MapPoint> correspondenceMapPoints,
+			Pose pose1, Pose pose0) {
+
+		double THRESHOLD = 0.02;
+
+		// get the second pose with respect to the first pose
+		Matrix E = pose1.getHomogeneousMatrix().times(pose0.getHomogeneousMatrix().inverse());
+
+		// get skew-symmetric cross product representation of the baseline
+		double a1 = E.get(0, 3);
+		double a2 = E.get(1, 3);
+		double a3 = E.get(2, 3);
+		Matrix B = new Matrix(3, 3);
+		B.set(0, 1, -a3);
+		B.set(0, 2, a2);
+		B.set(1, 0, a3);
+		B.set(1, 2, -a1);
+		B.set(2, 0, -a2);
+		B.set(2, 1, a1);
+
+		// get essential matrix
+		Matrix essentialMatrix = B.times(E.getMatrix(0, 2, 0, 2));
+
+		// get fundamental matrix
+		Matrix KInv = CameraIntrinsics.getK().inverse();
+		Matrix fundamentalMatrix = KInv.transpose().times(essentialMatrix).times(KInv);
+
+		double max = 0;
+
+		Utils.pl("epipolar, numCorrespondences: " + correspondences.size());
+		List<Double> epi = new ArrayList<Double>();
+
+		// evaluate each point with epipolar constraint
+		for (int i = 0; i < correspondences.size(); i++) {
+			Correspondence2D2D c = correspondences.get(i);
+			Matrix point0 = new Matrix(3, 1);
+			point0.set(0, 0, c.getX0());
+			point0.set(1, 0, c.getY0());
+			point0.set(2, 0, 1);
+			Matrix point1 = new Matrix(3, 1);
+			point1.set(0, 0, c.getX1());
+			point1.set(1, 0, c.getY1());
+			point1.set(2, 0, 1);
+
+			double epipolar = Math.abs(point1.transpose().times(fundamentalMatrix).times(point0).get(0, 0));
+			epi.add(epipolar);
+//			Utils.pl("epipolar: " + epipolar);
+			max = epipolar > max ? epipolar : max;
+			if (epipolar > THRESHOLD) {
+				correspondences.remove(i);
+				correspondenceMapPoints.remove(i);
+				i--;
+			}
+		}
+
+		Utils.pl("Max epipolar: " + max);
+
+		Collections.sort(epi);
+		for (int i = 0; i < epi.size(); i++) {
+//			Utils.pl("epipolar: " + epi.get(i));
+		}
+
 	}
 
 }

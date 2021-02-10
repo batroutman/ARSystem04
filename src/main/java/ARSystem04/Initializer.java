@@ -7,6 +7,7 @@ import org.opencv.core.DMatch;
 import org.opencv.core.KeyPoint;
 
 import Jama.Matrix;
+import runtimevars.CameraIntrinsics;
 import toolbox.Utils;
 import types.Correspondence2D2D;
 import types.ImageData;
@@ -65,9 +66,21 @@ public class Initializer {
 		// triangulate all matched points
 		Matrix E = pose.getHomogeneousMatrix();
 		Matrix I = Matrix.identity(4, 4);
+
+		// prune outliers with epipolar constraint
+//		Photogrammetry.epipolarPrune(correspondences, pose, new Pose());
+
+		Matrix K = CameraIntrinsics.getK();
+
 		synchronized (this.map) {
 			for (int i = 0; i < correspondences.size(); i++) {
+				Correspondence2D2D c = correspondences.get(i);
 				Matrix point = Photogrammetry.triangulate(E, I, correspondences.get(i));
+				Matrix proj1 = K.times(E.getMatrix(0, 2, 0, 3)).times(point);
+				proj1 = proj1.times(1 / proj1.get(2, 0));
+				double errProj1 = Math
+						.sqrt(Math.pow(proj1.get(0, 0) - c.getX1(), 2) + Math.pow(proj1.get(1, 0) - c.getY1(), 2));
+//				Utils.pl("err: " + errProj1);
 //				Utils.pl(point.get(0, 0) + ", " + point.get(1, 0) + ", " + point.get(2, 0));
 				Point3D point3D = new Point3D(point.get(0, 0), point.get(1, 0), point.get(2, 0));
 				MapPoint mapPoint = matchedMapPoints.get(matches.get(i).queryIdx);

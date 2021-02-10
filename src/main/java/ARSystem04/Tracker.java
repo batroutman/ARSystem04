@@ -114,10 +114,14 @@ public class Tracker {
 				// keep correspondence, go to next element in correspondences
 				j++;
 			} else {
-				// remove correspondence
+				// remove correspondence and map point
 				numPruned++;
 				i--;
 				outPrunedCorrespondences.remove(j);
+				MapPoint mp = outPrunedCorrespondenceMapPoints.get(j);
+				if (outMapPointPerDescriptor.indexOf(mp) != -1) {
+					outMapPointPerDescriptor.set(outMapPointPerDescriptor.indexOf(mp), null);
+				}
 				outPrunedCorrespondenceMapPoints.remove(j);
 			}
 		}
